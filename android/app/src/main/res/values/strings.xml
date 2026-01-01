@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Skills Game</string>
+    <string name="title_activity_main">Skills Game</string>
+    <string name="package_name">com.mohamed.skillsgame</string>
+    <string name="custom_url_scheme">com.mohamed.skillsgame</string>
+</resources>

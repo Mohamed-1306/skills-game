@@ -1,0 +1,4 @@
+// src/logic/day.js
+export function dayKeyNow() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
