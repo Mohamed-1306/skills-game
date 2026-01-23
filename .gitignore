@@ -5,3 +5,11 @@ android/app/build/
 ios/App/build/
 .DS_Store
 .env
+
+# Android Studio / IntelliJ
+android/.idea/
+*.iml
+
+# Android signing
+android/key.properties
+android/key.properties.bak
