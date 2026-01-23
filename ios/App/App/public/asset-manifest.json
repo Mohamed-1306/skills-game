@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.js": "/static/js/main.81c4e85c.js",
+    "static/media/logo-skills-challenge.svg": "/static/media/logo-skills-challenge.647bd6067ed4df3903b5d4da8668b919.svg",
+    "index.html": "/index.html",
+    "main.81c4e85c.js.map": "/static/js/main.81c4e85c.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.81c4e85c.js"
+  ]
+}

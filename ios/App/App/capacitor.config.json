@@ -1,0 +1,10 @@
+{
+	"appId": "com.mohamed.skillsgame",
+	"appName": "Skills Game",
+	"webDir": "build",
+	"bundledWebRuntime": false,
+	"server": {
+		"androidScheme": "https"
+	},
+	"packageClassList": []
+}
