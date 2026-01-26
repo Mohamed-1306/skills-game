@@ -74,22 +74,23 @@ function humanFirebaseError(error) {
       break;
   }
 
-  // Firestore
-  if (code === "permission-denied") {
-    return `⛔ permission-denied\n${debug}`;
-  }
-  if (code === "failed-precondition") {
-    return `🧱 failed-precondition (souvent index manquant)\n${debug}`;
-  }
-  if (code === "not-found") {
-    return `📄 not-found\n${debug}`;
-  }
-  if (code === "invalid-argument") {
-    return `⚠️ invalid-argument\n${debug}`;
-  }
-
-  return `❌ Erreur\n${debug}`;
+ // Firestore (messages UX)
+if (code === "permission-denied") {
+  return "Accès refusé. Connecte-toi ou vérifie que tu as bien les droits.";
 }
+if (code === "failed-precondition") {
+  return "Action impossible pour l’instant. Réessaie dans quelques minutes.";
+}
+if (code === "not-found") {
+  return "Élément introuvable.";
+}
+if (code === "invalid-argument") {
+  return "Donnée invalide. Vérifie les informations saisies.";
+}
+
+return "Une erreur est survenue. Réessaie.";
+}
+
 
 function handleAuthError(e, setErr) {
   console.error(e);
