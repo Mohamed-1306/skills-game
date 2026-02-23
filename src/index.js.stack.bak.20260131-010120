@@ -1,0 +1,48 @@
+import { Capacitor } from "@capacitor/core";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+
+(function blockGoogleGapiOnNative() {
+  if (!Capacitor.isNativePlatform()) return;
+
+  const blocked = /^(https?:)?\/\/apis\.google\.com\//i;
+
+  // Log + block scripts
+  const origCreate = document.createElement.bind(document);
+  document.createElement = function(tagName, options) {
+    const el = origCreate(tagName, options);
+    try {
+      if (String(tagName).toLowerCase() === "script") {
+        const origSet = el.setAttribute.bind(el);
+        el.setAttribute = function(name, value) {
+          if (String(name).toLowerCase() === "src") {
+            if (blocked.test(String(value))) {
+              console.warn("[native] BLOCK gapi script src:", value);
+              return;
+            }
+            console.warn("[native] script src:", value);
+          }
+          return origSet(name, value);
+        };
+      }
+    } catch (_) {}
+    return el;
+  };
+
+  const origAppend = Element.prototype.appendChild;
+  Element.prototype.appendChild = function(node) {
+    try {
+      if (node && node.tagName === "SCRIPT") {
+        const src = node.src || (node.getAttribute && node.getAttribute("src")) || "";
+        if (blocked.test(String(src))) {
+          console.warn("[native] BLOCK gapi script append:", src);
+          return node;
+        }
+      }
+    } catch (_) {}
+    return origAppend.call(this, node);
+  };
+})();
+
+const root = createRoot(document.getElementById("root"));
+root.render(<App />);

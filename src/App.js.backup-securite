@@ -1,13 +1,17 @@
- // src/App.js
-
-
-
+// src/App.js
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { serverTimestamp } from "firebase/firestore";
+import {
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
+  signOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 
-import { db, storage } from "./firebase";
+import { auth, db, storage } from "./firebase";
 
 import {
   collection,
@@ -15,16 +19,11 @@ import {
   onSnapshot,
   query,
   runTransaction,
+  serverTimestamp,
   where,
   setDoc,
   getDoc,
 } from "firebase/firestore";
-
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-} from "firebase/auth";
 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -42,11 +41,10 @@ import BottomNav from "./components/BottomNav";
 
 import Logo from "./assets/logo-skills-challenge.svg";
 
-
+const CARDS_COLLECTION = "cards";
 
 console.log("STORAGE BUCKET =", storage?.app?.options?.storageBucket);
 
-console.log("APP BUILD:", "2026-02-06 15:xx");
 /* =========================
    Errors (lisibles + debug)
 ========================= */
@@ -77,6 +75,12 @@ function humanFirebaseError(error) {
   }
 
  // Firestore (messages UX)
+if (code === "permission-denied") {
+  return "Accès refusé. Connecte-toi ou vérifie que tu as bien les droits.";
+}
+if (code === "failed-precondition") {
+  return "Action impossible pour l’instant. Réessaie dans quelques minutes.";
+}
 if (code === "not-found") {
   return "Élément introuvable.";
 }
@@ -84,25 +88,18 @@ if (code === "invalid-argument") {
   return "Donnée invalide. Vérifie les informations saisies.";
 }
 
-return "";
+return "Une erreur est survenue. Réessaie.";
 }
 
 
 function handleAuthError(e, setErr) {
-  // ✅ FIX: Log l'erreur de manière lisible
-  console.error("[ERROR] Code:", e?.code);
-  console.error("[ERROR] Message:", e?.message);
-  console.error("[ERROR] Full:", JSON.stringify(e, null, 2));
-  
+  console.error(e);
   if (e?.message && !e?.code) {
     setErr(e.message);
     return;
   }
-  const msg = humanFirebaseError(e);
-  console.error("[ERROR] Humanized:", msg);
-  setErr(msg);
+  setErr(humanFirebaseError(e));
 }
-
 
 /* =========================
    UI THEME
@@ -480,20 +477,18 @@ async function uploadAvatar({ file, uid }) {
 ========================= */
 export default function App() {
   const [user, setUser] = useState(null);
-  const [isCreating, setIsCreating] = useState(false);
+
   // refs (scroll + focus)
   const groupNameRef = useRef(null);
   const inviteCodeRef = useRef(null);
   const pseudoRef = useRef(null);
+
+  // Auth email
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignup, setIsSignup] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  
-
-  const [authBusy, setAuthBusy] = useState(false);
-
-// Group (single)
+  // Group (single)
   const [groupName, setGroupName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [activeGroupId, setActiveGroupId] = useState("");
@@ -527,51 +522,6 @@ export default function App() {
   const [pendingInviteGroupId, setPendingInviteGroupId] = useState("");
   const [autoJoining, setAutoJoining] = useState(false);
 
-  /* =========================
-     Load userProfile & restore group on page load
-  ========================= */
-  useEffect(() => {
-    if (!user) {
-      setUserProfile(null);
-      setActiveGroupId("");
-      return;
-    }
-
-    const userRef = doc(db, "users", user.uid);
-    
-    const unsubscribe = onSnapshot(
-      userRef,
-      (snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          setUserProfile(data);
-          
-          // Restore group if user has one
-          if (data.groupId) {
-            setActiveGroupId(data.groupId);
-          }
-          
-          // Check if user needs to set pseudo
-          if (!data.pseudo || data.pseudo.trim() === "") {
-            setNeedsPseudo(true);
-          } else {
-            setNeedsPseudo(false);
-            setDisplayName(data.pseudo);
-          }
-        } else {
-          // User doc doesn't exist yet (first login)
-          setUserProfile(null);
-          setNeedsPseudo(true);
-        }
-      },
-      (error) => {
-        console.error("Error loading user profile:", error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user]);
-
   const inviteCodeClean = useMemo(
     () => normalizeInviteCode(inviteCode),
     [inviteCode]
@@ -590,109 +540,195 @@ export default function App() {
      Auth init
   ========================= */
   useEffect(() => {
-  const onErr = (e) => {
-    try {
-      console.error("GLOBAL ERROR EVENT:", e);
-    } catch (_) {}
-  };
+    setPersistence(auth, browserLocalPersistence).catch(() => {});
+  }, []);
 
-  const handleWindowError = (e) => {
-    const info = {
-      type: e?.type,
-      message: e?.message,
-      filename: e?.filename,
-      lineno: e?.lineno,
-      colno: e?.colno,
-      errorName: e?.error?.name,
-      errorMessage: e?.error?.message,
-      stack: e?.error?.stack,
-    };
-    console.error("WINDOW ERROR:", info);
-    try { console.error("WINDOW ERROR RAW:", e); } catch (_) {}
-  };
-
-  const handleUnhandledRejection = (e) => {
-    const r = e?.reason;
-    const info = {
-      type: e?.type,
-      reasonType: typeof r,
-      reason: r,
-      reasonName: r?.name,
-      reasonMessage: r?.message,
-      stack: r?.stack,
-    };
-    console.error("UNHANDLED PROMISE REJECTION:", info);
-    try { console.error("UNHANDLED RAW:", e); } catch (_) {}
-  };
-
-  window.addEventListener("error", handleWindowError);
-  window.addEventListener("unhandledrejection", handleUnhandledRejection);
-
-  return () => {
-    window.removeEventListener("error", handleWindowError);
-    window.removeEventListener("unhandledrejection", handleUnhandledRejection);
-  };
-}, []);
-
-
-/* =========================
-   Toast on new incoming
-========================= */
-useEffect(() => {
-  if (!user) return;
-  if (incoming.length > prevIncomingCount) {
-    setToast({
-      text: `❄️ Nouveau défi reçu (${incoming.length})`,
-      kind: "info",
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      console.log("AUTH USER =", u?.uid, u?.email);
+      setUser(u);
     });
-    setTimeout(() => setToast(null), 2500);
-  }
-  setPrevIncomingCount(incoming.length);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [incoming.length, user?.uid]);
-  
-/* =========================
-   Realtime: Active Group
-========================= */
-useEffect(() => {
-  if (!activeGroupId) {
-    setActiveGroup(null);
-    return;
-  }
+    return () => unsub();
+  }, []);
 
-  const groupRef = doc(db, `groups/${activeGroupId}`);
+  useEffect(() => {
+    console.log("Firebase projectId:", auth.app.options.projectId);
+    console.log("Firebase storageBucket:", auth.app.options.storageBucket);
+  }, []);
 
-  return onSnapshot(
-    groupRef,
-    (snap) => {
-      if (snap.exists()) {
-        setActiveGroup({ id: snap.id, ...snap.data() });
-        console.log("[DEBUG] Groupe chargé:", snap.data());
-      } else {
-        setActiveGroup(null);
-        console.log("[DEBUG] Groupe introuvable");
+  useEffect(() => {
+    if (!user || !activeGroupId) return;
+
+    (async () => {
+      const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
+      const snap = await getDoc(meRef);
+
+      if (!snap.exists()) {
+        console.warn("⚠️ Member doc manquant → réparation auto");
+
+        await setDoc(
+          meRef,
+          {
+            pseudo: (displayName || userProfile?.pseudo || "Skieur").trim(),
+            avatarUrl: userProfile?.avatarUrl || "",
+            points: 0,
+            stats: { success: 0, fail: 0, eco: 0 },
+            joinedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+
+        console.log("✅ Member doc réparé");
       }
-    },
-    (e) => handleAuthError(e, setErr)
-  );
-}, [activeGroupId]);
+    })().catch(console.error);
+  }, [user?.uid, activeGroupId]);
 
+  /* =========================
+     Restore localStorage
+  ========================= */
 
-useEffect(() => {
-  if (!user?.uid) return;
+  useEffect(() => {
+    const saved = localStorage.getItem("skills_ski_activeGroupId");
+    if (saved) setActiveGroupId(saved);
+  }, []);
 
-  const cardsRef = collection(db, "cards");
-  
-  return onSnapshot(
-    cardsRef,
-    (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setCards(list);
-    },
-    (e) => handleAuthError(e, setErr)
-  );
-}, [user?.uid]);
+  useEffect(() => {
+    if (activeGroupId) {
+      localStorage.setItem("skills_ski_activeGroupId", activeGroupId);
+    }
+  }, [activeGroupId]);
 
+  useEffect(() => {
+    const savedPseudo = localStorage.getItem("skills_ski_pseudo");
+    if (savedPseudo) setDisplayName(savedPseudo);
+  }, []);
+
+  useEffect(() => {
+    if (displayName) localStorage.setItem("skills_ski_pseudo", displayName);
+  }, [displayName]);
+
+  /* =========================
+     User profile (/users/{uid})
+  ========================= */
+  useEffect(() => {
+    if (!user) {
+      setUserProfile(null);
+      setNeedsPseudo(false);
+      setPseudoDraft("");
+      return;
+    }
+
+    const uRef = doc(db, "users", user.uid);
+    return onSnapshot(
+      uRef,
+      (snap) => {
+        const data = snap.exists() ? snap.data() : {};
+        setUserProfile({ id: user.uid, ...(data || {}) });
+
+        const p = (data?.pseudo || "").trim();
+        const must = !p;
+        setNeedsPseudo(must);
+
+        if (p) {
+          setDisplayName((prev) => (prev && prev.trim() ? prev : p));
+          setPseudoDraft((prev) => (prev && prev.trim() ? prev : p));
+        }
+      },
+      (e) => handleAuthError(e, setErr)
+    );
+  }, [user?.uid]);
+
+  /* =========================
+     User doc init / ping (SAFE)
+  ========================= */
+  useEffect(() => {
+    if (!user) return;
+
+    const refU = doc(db, "users", user.uid);
+
+    runTransaction(db, async (tx) => {
+      const snap = await tx.get(refU);
+
+      if (!snap.exists()) {
+        tx.set(refU, {
+          email: user.email || "",
+          createdAt: serverTimestamp(),
+          lastSeenAt: serverTimestamp(),
+        });
+      } else {
+        tx.update(refU, { lastSeenAt: serverTimestamp() });
+      }
+    }).catch((e) => {
+      console.error("User init failed:", e);
+    });
+  }, [user?.uid]);
+
+  /* =========================
+     Keep activeGroupId in sync with /users/{uid}.groupId
+  ========================= */
+  useEffect(() => {
+    if (!user) return;
+
+    const uref = doc(db, "users", user.uid);
+    return onSnapshot(
+      uref,
+      (snap) => {
+        const data = snap.data() || {};
+        const gid = String(data.groupId || "").trim();
+        if (gid) setActiveGroupId(gid);
+      },
+      (e) => handleAuthError(e, setErr)
+    );
+  }, [user?.uid]);
+
+  /* =========================
+     Active group doc
+  ========================= */
+  useEffect(() => {
+    if (!activeGroupId) {
+      setActiveGroup(null);
+      return;
+    }
+    const gRef = doc(db, "groups", activeGroupId);
+    return onSnapshot(
+      gRef,
+      (snap) =>
+        setActiveGroup(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+      () => setActiveGroup(null)
+    );
+  }, [activeGroupId]);
+
+  /* =========================
+     Global errors
+  ========================= */
+  useEffect(() => {
+    function onErr(event) {
+      console.error("GLOBAL ERROR EVENT:", event);
+      const msg =
+        event?.message ||
+        event?.reason?.message ||
+        String(event?.reason || event);
+      setErr(msg);
+    }
+    window.addEventListener("error", onErr);
+    window.addEventListener("unhandledrejection", onErr);
+    return () => {
+      window.removeEventListener("error", onErr);
+      window.removeEventListener("unhandledrejection", onErr);
+    };
+  }, []);
+
+  /* =========================
+     Realtime: Cards
+  ========================= */
+  useEffect(() => {
+    const refC = collection(db, CARDS_COLLECTION);
+    return onSnapshot(
+      refC,
+      (snap) => setCards(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      (e) => handleAuthError(e, setErr)
+    );
+  }, []);
 
   /* =========================
      Realtime: Me (doc membre)
@@ -757,11 +793,21 @@ useEffect(() => {
     );
   }, [user?.uid, activeGroupId, me?.id]);
 
-
-  
-
-
-
+  /* =========================
+     Toast on new incoming
+  ========================= */
+  useEffect(() => {
+    if (!user) return;
+    if (incoming.length > prevIncomingCount) {
+      setToast({
+        text: `❄️ Nouveau défi reçu (${incoming.length})`,
+        kind: "info",
+      });
+      setTimeout(() => setToast(null), 2500);
+    }
+    setPrevIncomingCount(incoming.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incoming.length, user?.uid]);
 
   /* =========================
      Avatar picker (local) + autosave
@@ -775,13 +821,12 @@ useEffect(() => {
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarPreview(file ? URL.createObjectURL(file) : null);
 
-// autosave direct si on a déjà un membre (donc dans un groupe)
-if (!file) return;
-if (!activeGroupId) return; // ✅ FIX: Pas d'autosave si pas de groupe
+    // autosave direct si on a déjà un membre (donc dans un groupe)
+    if (!file) return;
 
-try {
-  if (!user) throw new Error("Non connecté.");
-  // activeGroupId existe forcément ici maintenant
+    try {
+      if (!user) throw new Error("Non connecté.");
+      if (!activeGroupId) throw new Error("Pas de groupe.");
 
       const url = await uploadAvatar({ file, uid: user.uid });
 
@@ -828,63 +873,26 @@ try {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-/* =========================
-   Auth actions (Email)
-========================= */
-async function signInEmail(email, password) {
-  if (authBusy) return;
-  setAuthBusy(true);
-  setErr("");
+  /* =========================
+     Auth actions
+  ========================= */
 
-  try {
-    const auth = getAuth();
-    await signInWithEmailAndPassword(auth, email, password);
-    setToast({ text: "✅ Connexion réussie", kind: "success" });
-    setTimeout(() => setToast(null), 2000);
-  } catch (e) {
-    handleAuthError(e, setErr);
-  } finally {
-    setAuthBusy(false);
+  async function signUpEmail() {
+    setErr("");
+    try {
+      const mail = email.trim();
+      if (!mail) throw new Error("Entre un email.");
+      if (password.length < 6)
+        throw new Error("Mot de passe : 6 caractères minimum.");
+
+      await createUserWithEmailAndPassword(auth, mail, password);
+
+      setToast({ text: "✅ Compte créé", kind: "success" });
+      setTimeout(() => setToast(null), 1500);
+    } catch (e) {
+      handleAuthError(e, setErr);
+    }
   }
-}
-
-async function signUpEmail(email, password) {
-  if (authBusy) return;
-  setAuthBusy(true);
-  setErr("");
-
-  try {
-    const auth = getAuth();
-    await createUserWithEmailAndPassword(auth, email, password);
-    
-    // ✅ AJOUTEZ CETTE LIGNE
-    setNeedsPseudo(true);
-    
-    setToast({ text: "✅ Compte créé", kind: "success" });
-    setTimeout(() => setToast(null), 2000);
-  } catch (e) {
-    handleAuthError(e, setErr);
-  } finally {
-    setAuthBusy(false);
-  }
-}
-
-async function logout() {
-  setErr("");
-  try {
-    await firebaseSignOut(getAuth());
-    setUser(null);
-    // ... ton reset localStorage etc
-  } catch (e) {
-    setErr(e?.message || String(e));
-  }
-}
-
-
-
-
-
-
 
   function pointsForCard(card) {
     const t = String(getCardType(card) || "").toLowerCase();
@@ -894,58 +902,98 @@ async function logout() {
     return 0;
   }
 
+  async function signInEmail() {
+    setErr("");
+    try {
+      const mail = email.trim();
+      if (!mail) throw new Error("Entre un email.");
+      if (!password) throw new Error("Entre un mot de passe.");
+      await signInWithEmailAndPassword(auth, mail, password);
+    } catch (e) {
+      handleAuthError(e, setErr);
+    }
+  }
+
+  async function forgotPassword() {
+    setErr("");
+    try {
+      const mail = email.trim();
+      if (!mail) throw new Error("Entre ton email pour recevoir le lien.");
+      await sendPasswordResetEmail(auth, mail);
+      setToast({
+        text: "📩 Email envoyé (vérifie tes spams)",
+        kind: "success",
+      });
+      setTimeout(() => setToast(null), 2500);
+    } catch (e) {
+      handleAuthError(e, setErr);
+    }
+  }
+
+  async function logout() {
+    setErr("");
+    try {
+      await signOut(auth);
+      localStorage.removeItem("skills_ski_pseudo");
+      localStorage.removeItem("skills_ski_activeGroupId");
+      localStorage.removeItem("skills_ski_pendingInvite");
+
+      setActiveGroupId("");
+      setActiveGroup(null);
+      setMembers([]);
+      setMe(null);
+      setIncoming([]);
+
+      setAvatarFile(null);
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      setAvatarPreview(null);
+    } catch (e) {
+      handleAuthError(e, setErr);
+    }
+  }
 
   /* =========================
      Pseudo save (user profile) + optional sync to member
   ========================= */
   async function savePseudoAtEntry() {
-  setErr("");
-  try {
-    if (!user) throw new Error("Non connecté.");
+    setErr("");
+    try {
+      if (!user) throw new Error("Non connecté.");
 
-    const pseudo = (pseudoDraft || "").trim();
-    if (!pseudo) throw new Error("Entre un pseudo.");
-    if (pseudo.length < 2) throw new Error("Pseudo trop court.");
-    if (pseudo.length > 18) throw new Error("Pseudo trop long (max 18).");
+      const pseudo = (pseudoDraft || "").trim();
+      if (!pseudo) throw new Error("Entre un pseudo.");
+      if (pseudo.length < 2) throw new Error("Pseudo trop court.");
+      if (pseudo.length > 18) throw new Error("Pseudo trop long (max 18).");
 
-    const userRef = doc(db, "users", user.uid);
+      const userRef = doc(db, "users", user.uid);
 
-    await runTransaction(db, async (tx) => {
-      // ✅ TOUTES LES LECTURES D'ABORD
-      let meSnap = null;
-      if (activeGroupId) {
-        const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
-        meSnap = await tx.get(meRef);
-      }
-
-      // ✅ TOUTES LES ÉCRITURES ENSUITE
-      tx.set(
-        userRef,
-        { pseudo, updatedAt: serverTimestamp() },
-        { merge: true }
-      );
-
-      if (activeGroupId && meSnap && meSnap.exists()) {
-        const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
+      await runTransaction(db, async (tx) => {
         tx.set(
-          meRef,
+          userRef,
           { pseudo, updatedAt: serverTimestamp() },
           { merge: true }
         );
-      }
-    });
 
-    setDisplayName(pseudo);
-    
-    // ✅ NOUVEAU : Désactiver l'écran de pseudo après validation
-    setNeedsPseudo(false);
-    
-    setToast({ text: "✅ Pseudo enregistré", kind: "success" });
-    setTimeout(() => setToast(null), 1500);
-  } catch (e) {
-    handleAuthError(e, setErr);
+        if (activeGroupId) {
+          const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
+          const meSnap = await tx.get(meRef);
+          if (meSnap.exists()) {
+            tx.set(
+              meRef,
+              { pseudo, updatedAt: serverTimestamp() },
+              { merge: true }
+            );
+          }
+        }
+      });
+
+      setDisplayName(pseudo);
+      setToast({ text: "✅ Pseudo enregistré", kind: "success" });
+      setTimeout(() => setToast(null), 1500);
+    } catch (e) {
+      handleAuthError(e, setErr);
+    }
   }
-}
 
   async function savePseudo(newPseudo) {
     setErr("");
@@ -960,32 +1008,27 @@ async function logout() {
       const userRef = doc(db, "users", user.uid);
 
       await runTransaction(db, async (tx) => {
-        // ✅ TOUTES LES LECTURES D'ABORD
-        let meSnap = null;
-        if (activeGroupId) {
-          const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
-          meSnap = await tx.get(meRef);
-        }
-
-        // ✅ TOUTES LES ÉCRITURES ENSUITE
         tx.set(
           userRef,
           { pseudo, updatedAt: serverTimestamp() },
           { merge: true }
         );
 
-        if (activeGroupId && meSnap && meSnap.exists()) {
+        if (activeGroupId) {
           const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
-          tx.set(
-            meRef,
-            { pseudo, updatedAt: serverTimestamp() },
-            { merge: true }
-          );
+
+          const meSnap = await tx.get(meRef);
+          if (meSnap.exists()) {
+            tx.set(
+              meRef,
+              { pseudo, updatedAt: serverTimestamp() },
+              { merge: true }
+            );
+          }
         }
       });
 
       setDisplayName(pseudo);
-      setNeedsPseudo(false);
       setToast({ text: "✅ Pseudo mis à jour", kind: "success" });
       setTimeout(() => setToast(null), 1200);
     } catch (e) {
@@ -1065,23 +1108,6 @@ async function logout() {
     });
   }
 
-
-
-useEffect(() => {
-  const auth = getAuth();
-
-  const unsub = onAuthStateChanged(auth, (u) => {
-    if (u) {
-      setUser(u);
-      setErr("");
-    } else {
-      setUser(null);
-    }
-  });
-
-  return () => unsub();
-}, []);
-
   useEffect(() => {
     if (!user || !me || !activeCards.length) return;
     ensureDailyHandAndAccumulate().catch((e) =>
@@ -1137,113 +1163,90 @@ useEffect(() => {
     }, 50);
   }
 
-async function createGroup() {
-  // Empêcher le double-clic
-  if (isCreating) {
-    console.log("[DEBUG] Création déjà en cours, ignoré");
-    return;
-  }
-  
-  setIsCreating(true);
-  console.log("[DEBUG] === DEBUT createGroup() ===");
-  setErr("");
+  async function createGroup() {
+    setErr("");
 
-  try {
-    // Validations
-    if (!user) throw new Error("Non connecté");
-    if (activeGroupId) throw new Error("Tu es déjà dans un groupe");
+    try {
+      if (!user) throw new Error("Non connecté. Connecte-toi d’abord.");
 
-    const pseudo = (displayName || userProfile?.pseudo || "").trim();
-    if (!pseudo) throw new Error("Entre un pseudo");
+      // ✅ si tu veux STRICT: empêcher création si déjà dans un groupe
+      if (activeGroupId) {
+        throw new Error("Tu es déjà dans un groupe. (1 groupe maximum)");
+      }
 
-    const name = (groupName || "").trim();
-    if (!name) throw new Error("Entre un nom de groupe");
+      const pseudo = (displayName || userProfile?.pseudo || "").trim();
+      if (!pseudo) throw new Error("Entre un pseudo.");
 
-    if (!activeCards.length) {
-      throw new Error("Cartes non chargées");
+      const name = (groupName || "").trim();
+      if (!name) throw new Error("Entre un nom de groupe (ex: coloc).");
+
+      if (!activeCards.length) {
+        throw new Error(
+          "Cartes non chargées (attends 1 seconde puis réessaie)."
+        );
+      }
+
+      let avatarUrl = "";
+      if (avatarFile) {
+        avatarUrl = await uploadAvatar({ file: avatarFile, uid: user.uid });
+      }
+
+      // id auto Firestore
+      const groupRef = doc(collection(db, "groups"));
+      const newGroupId = groupRef.id;
+
+      const meRef = doc(db, `groups/${newGroupId}/members/${user.uid}`);
+      const userRef = doc(db, "users", user.uid);
+
+      const deck = buildCycleDeck(activeCards);
+      const today = dayKeyParis();
+      const todayHand = handForCycleIndex(deck, 0);
+
+      await runTransaction(db, async (tx) => {
+        tx.set(groupRef, {
+          name,
+          createdAt: serverTimestamp(),
+          ownerUid: user.uid,
+          status: "active",
+        });
+
+        tx.set(meRef, {
+          pseudo,
+          avatarUrl: avatarUrl || "",
+          points: 0,
+          stats: { success: 0, fail: 0, eco: 0 },
+
+          cycleStartDayKey: today,
+          cycleDeck: deck,
+          cycleIndex: 0,
+
+          hand: todayHand,
+          handDayKey: today,
+
+          createdAt: serverTimestamp(),
+        });
+
+        // ✅ 1 seul groupe
+        tx.set(
+          userRef,
+          {
+            pseudo,
+            groupId: newGroupId,
+            avatarUrl: avatarUrl || "",
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+
+      setActiveGroupId(newGroupId);
+
+      setToast({ text: "✅ Groupe créé", kind: "success" });
+      setTimeout(() => setToast(null), 1500);
+    } catch (e) {
+      handleAuthError(e, setErr);
     }
-
-    // Upload avatar si besoin
-    let avatarUrl = "";
-    if (avatarFile) {
-      avatarUrl = await uploadAvatar({ file: avatarFile, uid: user.uid });
-    }
-
-    // Générer un ID aléatoire pour le groupe
-    const newGroupId = generateRandomId();
-    
-    const deck = buildCycleDeck(activeCards);
-    const today = dayKeyParis();
-    const todayHand = handForCycleIndex(deck, 0);
-
-    console.log("[DEBUG] Création groupe...");
-    console.log("[DEBUG] Nom du groupe:", name);
-    console.log("[DEBUG] ID du groupe:", newGroupId);
-
-    // 1. Créer le groupe
-    const groupRef = doc(db, "groups", newGroupId);
-    await setDoc(groupRef, {
-      name: name,
-      createdAt: serverTimestamp(),
-      ownerUid: user.uid,
-      status: "active",
-    });
-    console.log("[DEBUG] ✅ Groupe créé");
-
-    // 2. Créer le membre
-    const memberRef = doc(db, "groups", newGroupId, "members", user.uid);
-    await setDoc(memberRef, {
-      pseudo,
-      avatarUrl: avatarUrl || "",
-      points: 0,
-      stats: { success: 0, fail: 0, eco: 0 },
-      cycleStartDayKey: today,
-      cycleDeck: deck,
-      cycleIndex: 0,
-      hand: todayHand,
-      handDayKey: today,
-      createdAt: serverTimestamp(),
-    });
-    console.log("[DEBUG] ✅ Membre créé");
-
-    // 3. Mettre à jour l'utilisateur
-    const userRef = doc(db, "users", user.uid);
-    await setDoc(userRef, {
-      pseudo,
-      groupId: newGroupId,
-      avatarUrl: avatarUrl || "",
-      email: user.email || "",
-      updatedAt: serverTimestamp(),
-      lastSeenAt: serverTimestamp(),
-    });
-    console.log("[DEBUG] ✅ User mis à jour");
-
-    // 4. Mettre à jour l'état local
-    setActiveGroupId(newGroupId);
-    setToast({ text: "✅ Groupe créé : " + name, kind: "success" });
-    setTimeout(() => setToast(null), 2000);
-    
-    console.log("[DEBUG] === FIN createGroup() SUCCESS ===");
-
-  } catch (e) {
-    console.error("[ERROR]", e);
-    handleAuthError(e, setErr);
-  } finally {
-    setIsCreating(false);
   }
-}
-
-// Helper pour générer un ID aléatoire (comme Firestore)
-function generateRandomId() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let id = '';
-  for (let i = 0; i < 20; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return id;
-}
-
-
 
   async function joinGroup(groupIdFromParam) {
     setErr("");
@@ -1344,82 +1347,16 @@ function generateRandomId() {
   /* =========================
      Auto-join (invite URL)
   ========================= */
-/* =========================
-   Auto-join (invite URL)
-========================= */
-/* =========================
-   Auto-join (invite URL)
-========================= */
-useEffect(() => {
-  // ✅ NOUVEAU : Lire l'URL à chaque fois
-  const sp = new URLSearchParams(window.location.search);
-  const inviteFromUrl = sp.get("invite") || sp.get("group") || sp.get("g") || "";
-  const cleanInvite = normalizeInviteCode(inviteFromUrl);
-  
-  console.log("[AUTO-JOIN DEBUG] URL invite:", cleanInvite);
-  console.log("[AUTO-JOIN DEBUG] pendingInviteGroupId:", pendingInviteGroupId);
-  console.log("[AUTO-JOIN DEBUG] user:", !!user);
-  console.log("[AUTO-JOIN DEBUG] needsPseudo:", needsPseudo);
-  console.log("[AUTO-JOIN DEBUG] autoJoining:", autoJoining);
-  console.log("[AUTO-JOIN DEBUG] activeCards.length:", activeCards.length);
-  console.log("[AUTO-JOIN DEBUG] displayName:", displayName);
-  console.log("[AUTO-JOIN DEBUG] activeGroupId:", activeGroupId);
+  useEffect(() => {
+    if (!pendingInviteGroupId) return;
+    if (!user) return;
+    if (!userProfile) return;
+    if (needsPseudo) return;
+    if (autoJoining) return;
+    if (!activeCards.length) return;
 
-  // ✅ Utiliser cleanInvite au lieu de pendingInviteGroupId
-  if (!cleanInvite) {
-    console.log("[AUTO-JOIN] ❌ Pas d'invitation dans l'URL");
-    return;
-  }
-  if (!user) {
-    console.log("[AUTO-JOIN] ❌ Pas connecté");
-    return;
-  }
-  if (needsPseudo) {
-    console.log("[AUTO-JOIN] ❌ Besoin d'un pseudo");
-    return;
-  }
-  if (autoJoining) {
-    console.log("[AUTO-JOIN] ❌ Déjà en cours");
-    return;
-  }
-  if (!activeCards.length) {
-    console.log("[AUTO-JOIN] ❌ Cartes pas chargées");
-    return;
-  }
-
-  // si déjà dans ce groupe -> clean URL
-  if (activeGroupId === cleanInvite) {
-    console.log("[AUTO-JOIN] ✅ Déjà dans ce groupe, nettoyage...");
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("invite");
-      url.searchParams.delete("group");
-      url.searchParams.delete("g");
-      window.history.replaceState({}, "", url.toString());
-    } catch {}
-    localStorage.removeItem("skills_ski_pendingInvite");
-    return;
-  }
-
-  // besoin d'un pseudo
-  const pseudo = (displayName || "").trim();
-  console.log("[AUTO-JOIN] Pseudo trouvé:", pseudo);
-  
-  if (!pseudo) {
-    console.log("[AUTO-JOIN] ❌ Pas de pseudo");
-    return;
-  }
-
-  console.log("[AUTO-JOIN] 🚀 Lancement de l'auto-join...");
-  setAutoJoining(true);
-
-  (async () => {
-    try {
-      console.log("[AUTO-JOIN] Appel de joinGroup avec:", cleanInvite);
-      await joinGroup(cleanInvite);
-      console.log("[AUTO-JOIN] ✅ Groupe rejoint avec succès !");
-
-      // clean URL après succès
+    // si déjà dans ce groupe -> clean URL/local
+    if (activeGroupId === pendingInviteGroupId) {
       try {
         const url = new URL(window.location.href);
         url.searchParams.delete("invite");
@@ -1427,22 +1364,47 @@ useEffect(() => {
         url.searchParams.delete("g");
         window.history.replaceState({}, "", url.toString());
       } catch {}
-
       localStorage.removeItem("skills_ski_pendingInvite");
-    } catch (error) {
-      console.error("[AUTO-JOIN] ❌ Erreur:", error);
-    } finally {
-      setAutoJoining(false);
+      setPendingInviteGroupId("");
+      return;
     }
-  })();
-}, [
-  user?.uid,
-  needsPseudo,
-  autoJoining,
-  activeCards.length,
-  activeGroupId,
-  displayName,
-]);
+
+    // besoin d'un pseudo (displayName ou userProfile.pseudo)
+    const pseudo = (displayName || userProfile?.pseudo || "").trim();
+    if (!pseudo) return;
+
+    setAutoJoining(true);
+
+    (async () => {
+      try {
+        await joinGroup(pendingInviteGroupId);
+
+        // clean URL/local après succès
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("invite");
+          url.searchParams.delete("group");
+          url.searchParams.delete("g");
+          window.history.replaceState({}, "", url.toString());
+        } catch {}
+
+        localStorage.removeItem("skills_ski_pendingInvite");
+        setPendingInviteGroupId("");
+      } finally {
+        setAutoJoining(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    pendingInviteGroupId,
+    user?.uid,
+    needsPseudo,
+    autoJoining,
+    activeCards.length,
+    activeGroupId,
+    displayName,
+    userProfile?.pseudo,
+  ]);
 
   /* =========================
      Send / Resolve
@@ -1474,7 +1436,6 @@ useEffect(() => {
       const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
 
       await runTransaction(db, async (tx) => {
-        // ✅ TOUTES LES LECTURES EN PREMIER
         const meSnap = await tx.get(meRef);
         if (!meSnap.exists()) throw new Error("Pas dans le groupe.");
 
@@ -1491,11 +1452,6 @@ useEffect(() => {
             "Déjà envoyé aujourd'hui pour ce thème à cette personne."
           );
 
-        // Lire les données du destinataire AVANT d'écrire
-        const toRef = doc(db, `groups/${activeGroupId}/members/${toUid}`);
-        const toSnap = await tx.get(toRef);
-        
-        // ✅ TOUTES LES ÉCRITURES APRÈS
         tx.update(meRef, { hand: hand.filter((id) => id !== cleanCardId) });
 
         tx.set(chRef, {
@@ -1507,20 +1463,6 @@ useEffect(() => {
           status: "pending",
           createdAt: serverTimestamp(),
         });
-
-        // Ajouter la carte dans "incoming" du destinataire
-        if (toSnap.exists()) {
-          const toData = toSnap.data() || {};
-          const incomingRaw = Array.isArray(toData.incoming) ? toData.incoming : [];
-          const incoming = incomingRaw.map(cleanId);
-          
-          // Ajouter la carte si elle n'est pas déjà présente
-          if (!incoming.includes(cleanCardId)) {
-            tx.update(toRef, {
-              incoming: [...incoming, cleanCardId]
-            });
-          }
-        }
       });
 
       setCardId("");
@@ -1608,133 +1550,114 @@ useEffect(() => {
      Components in App
   ========================= */
   function Header({ right }) {
-  return (
-    <div style={{ ...ui.header, padding: "8px 14px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 6,
-          flexWrap: "wrap",
-        }}
-      >
-        <img
-          src={Logo}
-          alt="Skills Game"
+    return (
+      <div style={{ ...ui.header, padding: "8px 14px" }}>
+        <div
           style={{
-            width: "clamp(120px, 40vw, 160px)",
-            height: "auto",
-            display: "block",
-            marginBottom: window.innerWidth < 480 ? 2 : 6,
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 6, // ✅ réduit l’espace entre logo et texte
+            flexWrap: "wrap",
           }}
-        />
+        >
+          <img
+            src={Logo}
+            alt="Skills Game"
+            style={{
+              width: "clamp(120px, 40vw, 160px)", // ✅ plus petit sur mobile
+              height: "auto",
+              display: "block",
+              marginBottom: window.innerWidth < 480 ? 2 : 6,
+            }}
+          />
 
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <h1 style={{ ...ui.title, margin: "0" }}>SKILLS GAME</h1>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <h1 style={{ ...ui.title, margin: "0" }}>SKILLS GAME</h1>
 
-          <p style={{ ...ui.subtitle, margin: "6px 0 0" }}>
-            Défis, prévention & fun sur les pistes 🎿
-          </p>
+            <p style={{ ...ui.subtitle, margin: "6px 0 0" }}>
+              Défis, prévention & fun sur les pistes 🎿
+            </p>
 
-          {activeGroupId ? (
-            <div
-              style={{
-                marginTop: 8,
-                display: "flex",
-                gap: 10,
-                alignItems: "center",
-                flexWrap: "wrap",
-                color: "rgba(255,255,255,0.92)",
-                fontWeight: 950,
-                fontSize: "clamp(13px, 3.5vw, 15px)",
-              }}
-            >
-              {/* Nom du groupe */}
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                <span style={{ opacity: 0.8 }}>Groupe :</span>
+            {activeGroupId ? (
+              <div
+                style={{
+                  marginTop: 8,
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  color: "rgba(255,255,255,0.92)",
+                  fontWeight: 950,
+                }}
+              >
+                <div>Groupe :</div>
+
                 <span style={{ opacity: 0.95 }}>
                   {activeGroup?.name || "Mon groupe"}
                 </span>
+
+                <button
+                  onClick={async () => {
+                    const link = inviteLinkFromGroupId(activeGroupId);
+                    try {
+                      await navigator.clipboard.writeText(link);
+                      setToast({ text: "✅ Lien copié", kind: "success" });
+                      setTimeout(() => setToast(null), 1500);
+                    } catch {
+                      window.prompt("Copie ce lien :", link);
+                    }
+                  }}
+                  style={{
+                    borderRadius: 999,
+                    border: "1px solid rgba(255,255,255,0.35)",
+                    background: "rgba(255,255,255,0.14)",
+                    color: "#fff",
+                    padding: "6px 10px",
+                    fontWeight: 950,
+                    cursor: "pointer",
+                  }}
+                >
+                  📋 Copier le lien
+                </button>
+
+                <button
+                  onClick={async () => {
+                    const ok = await shareText({
+                      title: "SKILLS GAME",
+                      text: "Rejoins mon groupe SKILLS GAME :",
+                      url: inviteLinkFromGroupId(activeGroupId),
+                    });
+                    if (ok) {
+                      setToast({ text: "✅ Partage prêt", kind: "success" });
+                      setTimeout(() => setToast(null), 1500);
+                    }
+                  }}
+                  style={{
+                    borderRadius: 999,
+                    border: "1px solid rgba(255,255,255,0.35)",
+                    background: "rgba(255,255,255,0.14)",
+                    color: "#fff",
+                    padding: "6px 10px",
+                    fontWeight: 950,
+                    cursor: "pointer",
+                  }}
+                >
+                  📤 Partager
+                </button>
               </div>
+            ) : null}
+          </div>
 
-              {/* Séparateur */}
-              {members.length > 0 && (
-                <span style={{ opacity: 0.5 }}>•</span>
-              )}
-
-              {/* Nombre de membres (dynamique) */}
-              {members.length > 0 && (
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <span style={{ opacity: 0.95 }}>
-                    {members.length} membre{members.length > 1 ? 's' : ''}
-                  </span>
-                </div>
-              )}
-
-              {/* Boutons */}
-              <button
-                onClick={async () => {
-                  const link = inviteLinkFromGroupId(activeGroupId);
-                  try {
-                    await navigator.clipboard.writeText(link);
-                    setToast({ text: "✅ Lien copié", kind: "success" });
-                    setTimeout(() => setToast(null), 1500);
-                  } catch {
-                    window.prompt("Copie ce lien :", link);
-                  }
-                }}
-                style={{
-                  borderRadius: 999,
-                  border: "1px solid rgba(255,255,255,0.35)",
-                  background: "rgba(255,255,255,0.14)",
-                  color: "#fff",
-                  padding: "6px 10px",
-                  fontWeight: 950,
-                  cursor: "pointer",
-                  fontSize: "clamp(12px, 3vw, 14px)",
-                }}
-              >
-                📋 Copier le lien
-              </button>
-
-              <button
-                onClick={async () => {
-                  const ok = await shareText({
-                    title: "SKILLS GAME",
-                    text: "Rejoins mon groupe SKILLS GAME :",
-                    url: inviteLinkFromGroupId(activeGroupId),
-                  });
-                  if (ok) {
-                    setToast({ text: "✅ Partage prêt", kind: "success" });
-                    setTimeout(() => setToast(null), 1500);
-                  }
-                }}
-                style={{
-                  borderRadius: 999,
-                  border: "1px solid rgba(255,255,255,0.35)",
-                  background: "rgba(255,255,255,0.14)",
-                  color: "#fff",
-                  padding: "6px 10px",
-                  fontWeight: 950,
-                  cursor: "pointer",
-                  fontSize: "clamp(12px, 3vw, 14px)",
-                }}
-              >
-                📤 Partager
-              </button>
-            </div>
+          {right ? (
+            <div style={{ alignSelf: "flex-start" }}>{right}</div>
           ) : null}
         </div>
-
-        {right ? (
-          <div style={{ alignSelf: "flex-start" }}>{right}</div>
-        ) : null}
       </div>
-    </div>
-  );
-}
-const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
+    );
+  }
+
+  const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
 
   const ErrorBox = () =>
     err ? (
@@ -1769,105 +1692,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
       <div style={ui.page}>
         <div style={ui.container}>
           {toast && <Toast text={toast.text} kind={toast.kind} />}
-            {/* Header simplifié */}
-<div style={{
-  background: "linear-gradient(135deg, #2e77d0 0%, #1a5fb4 100%)",
-  padding: "12px 16px",
-  color: "#fff",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  flexWrap: "wrap",
-  gap: 10
-}}>
-  {/* Logo + Info */}
-  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-    <img 
-      src={Logo} 
-      alt="Skills Game" 
-      style={{ height: 40 }}
-    />
-    {activeGroupId && (
-      <div style={{ fontSize: 14, fontWeight: 600 }}>
-        {activeGroup?.name || "Mon groupe"} • {members.length} membre{members.length > 1 ? 's' : ''}
-      </div>
-    )}
-  </div>
 
-  {/* Boutons */}
-  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-    {activeGroupId && (
-      <>
-        <button
-          onClick={async () => {
-            const link = inviteLinkFromGroupId(activeGroupId);
-            try {
-              await navigator.clipboard.writeText(link);
-              setToast({ text: "✅ Lien copié", kind: "success" });
-              setTimeout(() => setToast(null), 1500);
-            } catch {
-              window.prompt("Copie ce lien :", link);
-            }
-          }}
-          style={{
-            background: "rgba(255,255,255,0.2)",
-            border: "1px solid rgba(255,255,255,0.3)",
-            color: "#fff",
-            padding: "6px 12px",
-            borderRadius: 6,
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: 600
-          }}
-        >
-          📋 Copier le lien
-        </button>
-
-        <button
-          onClick={async () => {
-            const ok = await shareText({
-              title: "SKILLS GAME",
-              text: "Rejoins mon groupe SKILLS GAME :",
-              url: inviteLinkFromGroupId(activeGroupId),
-            });
-            if (ok) {
-              setToast({ text: "✅ Partage prêt", kind: "success" });
-              setTimeout(() => setToast(null), 1500);
-            }
-          }}
-          style={{
-            background: "rgba(255,255,255,0.2)",
-            border: "1px solid rgba(255,255,255,0.3)",
-            color: "#fff",
-            padding: "6px 12px",
-            borderRadius: 6,
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: 600
-          }}
-        >
-          📤 Partager
-        </button>
-      </>
-    )}
-
-    <button
-      onClick={logout}
-      style={{
-        background: "rgba(255,255,255,0.2)",
-        border: "1px solid rgba(255,255,255,0.3)",
-        color: "#fff",
-        padding: "6px 12px",
-        borderRadius: 6,
-        cursor: "pointer",
-        fontSize: 13,
-        fontWeight: 600
-      }}
-    >
-      🚪 Déconnexion
-    </button>
-  </div>
-</div>
           <div style={{ ...ui.panel, marginTop: 16 }}>
             <h2 style={{ marginTop: 0, color: "#08304d" }}>
               ⛷️ Choisis ton pseudo
@@ -1914,92 +1739,87 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
     );
   }
 
-
-/* =========================
-   NOT CONNECTED (Login/Signup)
-========================= */
-
-
+  /* =========================
+     NOT CONNECTED (Login)
+  ========================= */
   if (!user) {
     return (
-    <div style={ui.page}>
-      <div style={ui.container}>
-        <div style={ui.panel}>
-          <h2 style={{ marginTop: 0, color: "#08304d" }}>
-            {isSignup ? "Créer un compte" : "Connexion"}
-          </h2>
+      <div style={ui.page}>
+        <div style={ui.container}>
+          <div style={ui.panel}>
+            <h2 style={{ marginTop: 0, color: "#08304d" }}>Connexion</h2>
 
-          <p style={{ color: "#08304d", opacity: 0.9, marginTop: 6 }}>
-            {isSignup
-              ? "Crée un compte pour commencer à jouer."
-              : "Connecte-toi pour continuer."}
-          </p>
+            <div style={{ display: "grid", gap: 10 }}>
+              <input
+                style={ui.input}
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
 
-          {err ? (
-            <div style={ui.error}>
-              <b>Erreur</b>
-              <div style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>{err}</div>
+              <div style={{ display: "grid", gap: 8 }}>
+                <input
+                  style={ui.input}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Mot de passe"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+
+                <button
+                  type="button"
+                  style={ui.buttonGhost}
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? "🙈 Masquer" : "🙉 Afficher"} le mot de passe
+                </button>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button style={ui.button} onClick={signInEmail}>
+                  ✅ Se connecter
+                </button>
+
+                <button style={ui.buttonGhost} onClick={signUpEmail}>
+                  ➕ Créer un compte
+                </button>
+              </div>
+
+              <button style={ui.buttonGhost} onClick={forgotPassword}>
+                🔁 Mot de passe oublié
+              </button>
+
+              <button
+                style={{ ...ui.buttonGhost, marginTop: 6 }}
+                onClick={() => window.location.reload()}
+              >
+                🔄 Recharger
+              </button>
             </div>
-          ) : null}
 
-          <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={ui.input}
-              autoComplete="email"
-            />
-
-            <input
-              type="password"
-              placeholder="Mot de passe (min 6 caractères)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={ui.input}
-              autoComplete={isSignup ? "new-password" : "current-password"}
-            />
-
-            <button
-              type="button"
-              disabled={authBusy}
-              style={ui.button}
-              onClick={() =>
-                isSignup
-                  ? signUpEmail(email, password)
-                  : signInEmail(email, password)
-              }
-            >
-              {authBusy
-                ? "⏳ Chargement..."
-                : isSignup
-                ? "✅ Créer mon compte"
-                : "🔓 Se connecter"}
-            </button>
-
-            <button
-              type="button"
-              style={ui.buttonGhost}
-              onClick={() => {
-                setIsSignup(!isSignup);
-                setErr("");
-              }}
-            >
-              {isSignup
-                ? "← J'ai déjà un compte"
-                : "➕ Créer un compte"}
-            </button>
+            {err ? (
+              <div style={ui.error}>
+                <b>Erreur</b>
+                <div style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>
+                  {err}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
-    </div>
     );
   }
 
-/* =========================
-   CONNECTED (Main app)
-========================= */
+  /* =========================
+     CONNECTED (Main app)
+  ========================= */
+  /* =========================
+     CONNECTED (Main app)
+  ========================= */
   return (
     <div style={ui.page}>
       <div style={ui.container}>
@@ -2007,18 +1827,15 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
 
         {/* ✅ HEADER + STATS + GROUPE seulement sur Classement */}
         {/* ✅ HEADER + STATS + GROUPE seulement sur Classement */}
-
-        {/* ✅ HEADER TOUJOURS VISIBLE */}
-        <Header
-          right={
-            <button style={ui.buttonGhost} onClick={logout}>
-              🚪 Déconnexion
-            </button>
-          }
-        />
         {tab === "leaderboard" ? (
           <>
-            
+            <Header
+              right={
+                <button style={ui.buttonGhost} onClick={logout}>
+                  🚪 Déconnexion
+                </button>
+              }
+            />
 
             <div style={ui.statsBar}>
               <div></div>
@@ -2029,7 +1846,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
               <div style={ui.pill}>🏆 {me?.points || 0} pts</div>
             </div>
 
-            {/* <ErrorBox /> */}
+            <ErrorBox />
 
             {/* ✅ FORMULAIRE GROUPE (uniquement sur Classement) */}
             <div style={{ ...ui.panel, marginTop: 16 }}>
@@ -2160,48 +1977,31 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                         />
 
                         <button
-  style={{ 
-    ...ui.button, 
-    minWidth: "min(220px, 100%)",
-    opacity: isCreating ? 0.6 : 1,
-    cursor: isCreating ? "not-allowed" : "pointer"
-  }}
-  disabled={isCreating}
-  onClick={() => {
-    console.log("[DEBUG] Bouton Créer groupe cliqué!");
-    console.log("[DEBUG] displayName:", displayName);
-    console.log("[DEBUG] groupName:", groupName);
-    console.log("[DEBUG] userProfile?.pseudo:", userProfile?.pseudo);
-    console.log("[DEBUG] isCreating:", isCreating);
-    
-    setErr("");
+                          style={{ ...ui.button, minWidth: "min(220px, 100%)" }}
+                          onClick={() => {
+                            setErr("");
 
-    const pseudoOk =
-      displayName.trim() ||
-      (userProfile?.pseudo || "").trim();
+                            const pseudoOk =
+                              displayName.trim() ||
+                              (userProfile?.pseudo || "").trim();
 
-    console.log("[DEBUG] pseudoOk:", pseudoOk);
+                            if (!pseudoOk) {
+                              setErr("Entre un pseudo pour créer un groupe.");
+                              scrollFocus(pseudoRef);
+                              return;
+                            }
 
-    if (!pseudoOk) {
-      console.log("[DEBUG] ERREUR: Pseudo manquant");
-      setErr("Entre un pseudo pour créer un groupe.");
-      scrollFocus(pseudoRef);
-      return;
-    }
+                            if (!groupName.trim()) {
+                              setErr("Entre un nom de groupe (ex: coloc).");
+                              scrollFocus(groupNameRef);
+                              return;
+                            }
 
-    if (!groupName.trim()) {
-      console.log("[DEBUG] ERREUR: Nom de groupe manquant");
-      setErr("Entre un nom de groupe (ex: coloc).");
-      scrollFocus(groupNameRef);
-      return;
-    }
-
-    console.log("[DEBUG] Validation OK, appel createGroup()");
-    createGroup();
-  }}
->
-  {isCreating ? "⏳ Création en cours..." : "➕ Créer un nouveau groupe"}
-</button>
+                            createGroup();
+                          }}
+                        >
+                          ➕ Créer un nouveau groupe
+                        </button>
                       </div>
                     ) : (
                       <div
@@ -2436,7 +2236,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
               </div>
             ) : null}
 
-            {/* <ErrorBox /> */}
+            <ErrorBox />
           </>
         )}
 

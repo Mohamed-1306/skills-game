@@ -1,0 +1,94 @@
+import { Capacitor } from "@capacitor/core";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+
+const isNative = () => {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
+
+if (isNative()) {
+  const blocked = /^(https?:)?\/\/(apis\.google\.com|accounts\.google\.com|developers\.google\.com)\//i;
+
+  const shouldBlock = (src) => {
+    try {
+      return typeof src === "string" && blocked.test(src);
+    } catch {
+      return false;
+    }
+
+// DEBUG_NETWORK_NATIVE
+if (isNative()) {
+  console.warn("[native][netlog] installed");
+  const _fetch = window.fetch.bind(window);
+  window.fetch = async (...args) => {
+    try {
+      const res = await _fetch(...args);
+      if (!res.ok) {
+        console.warn("[native][fetch]", res.status, res.url);
+      }
+      return res;
+    } catch (e) {
+      const url = (args && args[0] && args[0].url) ? args[0].url : String(args[0]);
+      console.error("[native][fetch][ERR]", url, e);
+      throw e;
+    }
+  };
+
+  const _open = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+    this.__url = url;
+    return _open.call(this, method, url, ...rest);
+  };
+  const _send = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.send = function(...args) {
+    this.addEventListener("error", () => console.error("[native][xhr][ERR]", this.__url));
+    this.addEventListener("load", () => {
+      if (this.status >= 400) console.warn("[native][xhr]", this.status, this.__url);
+    });
+    return _send.call(this, ...args);
+  };
+}
+
+  };
+
+  // Block when code creates <script> and sets src
+  const origCreate = document.createElement.bind(document);
+  document.createElement = function (tagName, options) {
+    const el = origCreate(tagName, options);
+    try {
+      if (String(tagName).toLowerCase() === "script") {
+        const origSetAttr = el.setAttribute.bind(el);
+        el.setAttribute = function (name, value) {
+          if (String(name).toLowerCase() === "src" && shouldBlock(value)) {
+            console.warn("[native] blocked google script:", value);
+            return;
+          }
+          return origSetAttr(name, value);
+        };
+      }
+    } catch (_) {}
+    return el;
+  };
+
+  // Block when code appends an existing <script src="...">
+  const origAppend = Element.prototype.appendChild;
+  Element.prototype.appendChild = function (node) {
+    try {
+      if (node && node.tagName === "SCRIPT") {
+        const src = node.src || (node.getAttribute && node.getAttribute("src")) || "";
+        if (shouldBlock(src)) {
+          console.warn("[native] blocked google script append:", src);
+          return node;
+        }
+      }
+    } catch (_) {}
+    return origAppend.call(this, node);
+  };
+}
+
+const root = createRoot(document.getElementById("root"));
+root.render(<App />);

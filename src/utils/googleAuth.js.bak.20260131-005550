@@ -1,0 +1,72 @@
+import { Capacitor } from "@capacitor/core";
+import { SocialLogin } from "@capgo/capacitor-social-login";
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signInWithPopup,
+} from "firebase/auth";
+
+/**
+ * IMPORTANT:
+ * Pour iOS/Android, on utilise le login natif (pas de gapi).
+ * Pour le Web, on garde signInWithPopup.
+ *
+ * WEB CLIENT ID:
+ * - Mets ton Web Client ID OAuth (se termine par .apps.googleusercontent.com)
+ * - Soit dans .env: REACT_APP_GOOGLE_WEB_CLIENT_ID="xxxx.apps.googleusercontent.com"
+ */
+const WEB_CLIENT_ID = process.env.REACT_APP_GOOGLE_WEB_CLIENT_ID;
+
+let inited = false;
+async function ensureInit() {
+  if (inited) return;
+
+  const opts = {};
+  if (WEB_CLIENT_ID && WEB_CLIENT_ID.includes(".apps.googleusercontent.com")) {
+    opts.google = { webClientId: WEB_CLIENT_ID };
+  } else {
+    // On n'échoue pas au build si tu n'as pas encore mis le Web Client ID
+    console.warn(
+      "[SocialLogin] REACT_APP_GOOGLE_WEB_CLIENT_ID manquant. " +
+        "Le login natif peut échouer si le plugin en a besoin."
+    );
+  }
+
+  await SocialLogin.initialize(opts);
+  inited = true;
+}
+
+export async function signInWithGoogle(auth) {
+  // ✅ Natif iOS/Android
+  if (Capacitor.isNativePlatform()) {
+    await ensureInit();
+
+    const res = await SocialLogin.login({ provider: "google" });
+
+    const idToken =
+      res?.result?.idToken ||
+      res?.result?.id_token ||
+      res?.result?.authentication?.idToken ||
+      res?.authentication?.idToken ||
+      res?.idToken;
+
+    const accessToken =
+      res?.result?.accessToken ||
+      res?.result?.access_token ||
+      res?.result?.authentication?.accessToken ||
+      res?.authentication?.accessToken ||
+      res?.accessToken;
+
+    if (!idToken) {
+      console.error("[google native] raw response:", res);
+      throw new Error("Google native login: missing idToken");
+    }
+
+    const cred = GoogleAuthProvider.credential(idToken, accessToken);
+    return signInWithCredential(auth, cred);
+  }
+
+  // ✅ Web (browser)
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(auth, provider);
+}

@@ -1,4 +1,4 @@
- // src/App.js
+// src/App.js
 
 
 
@@ -77,6 +77,12 @@ function humanFirebaseError(error) {
   }
 
  // Firestore (messages UX)
+if (code === "permission-denied") {
+  return "Accès refusé. Connecte-toi ou vérifie que tu as bien les droits.";
+}
+if (code === "failed-precondition") {
+  return "Action impossible pour l’instant. Réessaie dans quelques minutes.";
+}
 if (code === "not-found") {
   return "Élément introuvable.";
 }
@@ -84,7 +90,7 @@ if (code === "invalid-argument") {
   return "Donnée invalide. Vérifie les informations saisies.";
 }
 
-return "";
+return "Une erreur est survenue. Réessaie.";
 }
 
 
@@ -527,51 +533,6 @@ export default function App() {
   const [pendingInviteGroupId, setPendingInviteGroupId] = useState("");
   const [autoJoining, setAutoJoining] = useState(false);
 
-  /* =========================
-     Load userProfile & restore group on page load
-  ========================= */
-  useEffect(() => {
-    if (!user) {
-      setUserProfile(null);
-      setActiveGroupId("");
-      return;
-    }
-
-    const userRef = doc(db, "users", user.uid);
-    
-    const unsubscribe = onSnapshot(
-      userRef,
-      (snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          setUserProfile(data);
-          
-          // Restore group if user has one
-          if (data.groupId) {
-            setActiveGroupId(data.groupId);
-          }
-          
-          // Check if user needs to set pseudo
-          if (!data.pseudo || data.pseudo.trim() === "") {
-            setNeedsPseudo(true);
-          } else {
-            setNeedsPseudo(false);
-            setDisplayName(data.pseudo);
-          }
-        } else {
-          // User doc doesn't exist yet (first login)
-          setUserProfile(null);
-          setNeedsPseudo(true);
-        }
-      },
-      (error) => {
-        console.error("Error loading user profile:", error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user]);
-
   const inviteCodeClean = useMemo(
     () => normalizeInviteCode(inviteCode),
     [inviteCode]
@@ -911,27 +872,22 @@ async function logout() {
     const userRef = doc(db, "users", user.uid);
 
     await runTransaction(db, async (tx) => {
-      // ✅ TOUTES LES LECTURES D'ABORD
-      let meSnap = null;
-      if (activeGroupId) {
-        const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
-        meSnap = await tx.get(meRef);
-      }
-
-      // ✅ TOUTES LES ÉCRITURES ENSUITE
       tx.set(
         userRef,
         { pseudo, updatedAt: serverTimestamp() },
         { merge: true }
       );
 
-      if (activeGroupId && meSnap && meSnap.exists()) {
+      if (activeGroupId) {
         const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
-        tx.set(
-          meRef,
-          { pseudo, updatedAt: serverTimestamp() },
-          { merge: true }
-        );
+        const meSnap = await tx.get(meRef);
+        if (meSnap.exists()) {
+          tx.set(
+            meRef,
+            { pseudo, updatedAt: serverTimestamp() },
+            { merge: true }
+          );
+        }
       }
     });
 
@@ -960,27 +916,23 @@ async function logout() {
       const userRef = doc(db, "users", user.uid);
 
       await runTransaction(db, async (tx) => {
-        // ✅ TOUTES LES LECTURES D'ABORD
-        let meSnap = null;
-        if (activeGroupId) {
-          const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
-          meSnap = await tx.get(meRef);
-        }
-
-        // ✅ TOUTES LES ÉCRITURES ENSUITE
         tx.set(
           userRef,
           { pseudo, updatedAt: serverTimestamp() },
           { merge: true }
         );
 
-        if (activeGroupId && meSnap && meSnap.exists()) {
+        if (activeGroupId) {
           const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
-          tx.set(
-            meRef,
-            { pseudo, updatedAt: serverTimestamp() },
-            { merge: true }
-          );
+
+          const meSnap = await tx.get(meRef);
+          if (meSnap.exists()) {
+            tx.set(
+              meRef,
+              { pseudo, updatedAt: serverTimestamp() },
+              { merge: true }
+            );
+          }
         }
       });
 
@@ -1474,7 +1426,6 @@ useEffect(() => {
       const meRef = doc(db, `groups/${activeGroupId}/members/${user.uid}`);
 
       await runTransaction(db, async (tx) => {
-        // ✅ TOUTES LES LECTURES EN PREMIER
         const meSnap = await tx.get(meRef);
         if (!meSnap.exists()) throw new Error("Pas dans le groupe.");
 
@@ -1491,11 +1442,6 @@ useEffect(() => {
             "Déjà envoyé aujourd'hui pour ce thème à cette personne."
           );
 
-        // Lire les données du destinataire AVANT d'écrire
-        const toRef = doc(db, `groups/${activeGroupId}/members/${toUid}`);
-        const toSnap = await tx.get(toRef);
-        
-        // ✅ TOUTES LES ÉCRITURES APRÈS
         tx.update(meRef, { hand: hand.filter((id) => id !== cleanCardId) });
 
         tx.set(chRef, {
@@ -1507,20 +1453,6 @@ useEffect(() => {
           status: "pending",
           createdAt: serverTimestamp(),
         });
-
-        // Ajouter la carte dans "incoming" du destinataire
-        if (toSnap.exists()) {
-          const toData = toSnap.data() || {};
-          const incomingRaw = Array.isArray(toData.incoming) ? toData.incoming : [];
-          const incoming = incomingRaw.map(cleanId);
-          
-          // Ajouter la carte si elle n'est pas déjà présente
-          if (!incoming.includes(cleanCardId)) {
-            tx.update(toRef, {
-              incoming: [...incoming, cleanCardId]
-            });
-          }
-        }
       });
 
       setCardId("");
@@ -2007,15 +1939,6 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
 
         {/* ✅ HEADER + STATS + GROUPE seulement sur Classement */}
         {/* ✅ HEADER + STATS + GROUPE seulement sur Classement */}
-
-        {/* ✅ HEADER TOUJOURS VISIBLE */}
-        <Header
-          right={
-            <button style={ui.buttonGhost} onClick={logout}>
-              🚪 Déconnexion
-            </button>
-          }
-        />
         {tab === "leaderboard" ? (
           <>
             
@@ -2029,7 +1952,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
               <div style={ui.pill}>🏆 {me?.points || 0} pts</div>
             </div>
 
-            {/* <ErrorBox /> */}
+            <ErrorBox />
 
             {/* ✅ FORMULAIRE GROUPE (uniquement sur Classement) */}
             <div style={{ ...ui.panel, marginTop: 16 }}>
@@ -2436,7 +2359,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
               </div>
             ) : null}
 
-            {/* <ErrorBox /> */}
+            <ErrorBox />
           </>
         )}
 

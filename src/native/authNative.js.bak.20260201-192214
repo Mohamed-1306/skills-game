@@ -1,0 +1,40 @@
+import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
+
+/** Signup natif (NE PAS envoyer le mail ici) */
+export async function nativeSignUpEmail(email, password) {
+  const { user } = await FirebaseAuthentication.createUserWithEmailAndPassword({
+    email,
+    password,
+  });
+  return user;
+}
+
+/** Envoi mail de vérification (séparé) */
+export async function nativeSendEmailVerification() {
+  await FirebaseAuthentication.sendEmailVerification();
+}
+
+/** Signin natif */
+export async function nativeSignInEmail(email, password) {
+  const { user } = await FirebaseAuthentication.signInWithEmailAndPassword({
+    email,
+    password,
+  });
+  return user;
+}
+
+export async function nativeSignOut() {
+  await FirebaseAuthentication.signOut();
+}
+
+export async function nativeGetCurrentUser() {
+  const res = await FirebaseAuthentication.getCurrentUser();
+  return res.user || null;
+}
+
+export async function nativeOnAuthStateChange(cb) {
+  const handle = await FirebaseAuthentication.addListener("authStateChange", (event) => {
+    cb(event.user || null);
+  });
+  return handle;
+}

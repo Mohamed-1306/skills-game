@@ -1,0 +1,44 @@
+import { Capacitor } from "@capacitor/core";
+import { SocialLogin } from "@capgo/capacitor-social-login";
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signInWithPopup,
+} from "firebase/auth";
+import { auth } from "../firebase"; // <-- adapte si ton fichier firebase est ailleurs
+
+// Mets ici le Web Client ID (OAuth "Web application") depuis Google Cloud Console
+const WEB_CLIENT_ID = "XXXX.apps.googleusercontent.com";
+
+let inited = false;
+async function ensureInit() {
+  if (inited) return;
+  await SocialLogin.initialize({
+    google: { webClientId: WEB_CLIENT_ID },
+  });
+  inited = true;
+}
+
+export async function signInWithGoogle() {
+  const platform = Capacitor.getPlatform();
+
+  // Natif iOS/Android
+  if (platform === "ios" || platform === "android") {
+    await ensureInit();
+    const result = await SocialLogin.login({ provider: "google" });
+
+    const idToken =
+      result?.result?.idToken ||
+      result?.authentication?.idToken ||
+      result?.idToken;
+
+    if (!idToken) throw new Error("No idToken from native Google login");
+
+    const cred = GoogleAuthProvider.credential(idToken);
+    return signInWithCredential(auth, cred);
+  }
+
+  // Web (browser)
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(auth, provider);
+}
