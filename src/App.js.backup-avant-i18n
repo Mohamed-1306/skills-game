@@ -1,4 +1,4 @@
-// src/App.js
+ // src/App.js
 
 
 
@@ -27,11 +27,6 @@ import {
 } from "firebase/auth";
 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-
-// i18n imports
-import './i18n';
-import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from './components/LanguageSwitcher';
 
 import Hand from "./components/Hand";
 import SendCard from "./components/SendCard";
@@ -484,7 +479,6 @@ async function uploadAvatar({ file, uid }) {
    App
 ========================= */
 export default function App() {
-  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   // refs (scroll + focus)
@@ -1856,7 +1850,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
         </button>
       </>
     )}
-    <LanguageSwitcher />
+
     <button
       onClick={logout}
       style={{
@@ -1870,7 +1864,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
         fontWeight: 600
       }}
     >
-      {t('auth.logout')}
+      🚪 Déconnexion
     </button>
   </div>
 </div>
@@ -1904,7 +1898,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
               </button>
 
               <button style={ui.buttonGhost} onClick={logout}>
-                {t('auth.logout')}
+                🚪 Déconnexion
               </button>
             </div>
 
@@ -1932,7 +1926,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
       <div style={ui.container}>
         <div style={ui.panel}>
           <h2 style={{ marginTop: 0, color: "#08304d" }}>
-            {isSignup ? t("auth.signup") : t("auth.login")}
+            {isSignup ? "Créer un compte" : "Connexion"}
           </h2>
 
           <p style={{ color: "#08304d", opacity: 0.9, marginTop: 6 }}>
@@ -1951,7 +1945,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
           <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
             <input
               type="email"
-              placeholder={t("auth.email")}
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={ui.input}
@@ -1978,7 +1972,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
               }
             >
               {authBusy
-                ? t("auth.loading")
+                ? "⏳ Chargement..."
                 : isSignup
                 ? "✅ Créer mon compte"
                 : "🔓 Se connecter"}
@@ -2016,15 +2010,12 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
 
         {/* ✅ HEADER TOUJOURS VISIBLE */}
         <Header
-  right={
-    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-      <LanguageSwitcher />
-      <button style={ui.buttonGhost} onClick={logout}>
-        {t('auth.logout')}
-      </button>
-    </div>
-  }
-/>
+          right={
+            <button style={ui.buttonGhost} onClick={logout}>
+              🚪 Déconnexion
+            </button>
+          }
+        />
         {tab === "leaderboard" ? (
           <>
             
@@ -2032,7 +2023,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
             <div style={ui.statsBar}>
               <div></div>
               <div>
-                {t("group.members")}: <b>{members.length}</b>
+                Membres: <b>{members.length}</b>
               </div>
               <div style={ui.pill}>✅ {myStats.success || 0}</div>
               <div style={ui.pill}>🏆 {me?.points || 0} pts</div>
@@ -2045,7 +2036,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
               <div
                 style={{ fontWeight: 950, marginBottom: 10, color: "#08304d" }}
               >
-                {t("group.title")}
+                Groupe
               </div>
 
               <div style={ui.stackCenter}>
@@ -2053,7 +2044,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                 <input
                   ref={pseudoRef}
                   style={ui.input}
-                  placeholder={t("profile.pseudo")}
+                  placeholder="Ton pseudo"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                 />
@@ -2075,7 +2066,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                       !displayName.trim() ? "Entre un pseudo" : "Mettre à jour"
                     }
                   >
-                    {"✍️ " + t("profile.changePseudo")}
+                    ✍️ Changer pseudo
                   </button>
 
                   <label
@@ -2090,7 +2081,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                     }}
                     title="Choisir une photo depuis ton appareil"
                   >
-                    {"🧑‍🎿 " + t("profile.changeAvatar")}
+                    🧑‍🎿 Changer mon avatar
                     <input
                       type="file"
                       accept="image/*"
@@ -2163,7 +2154,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                         <input
                           ref={groupNameRef}
                           style={ui.input}
-                          placeholder={t("group.name")}
+                          placeholder="Nom du groupe (ex: coloc)"
                           value={groupName}
                           onChange={(e) => setGroupName(e.target.value)}
                         />
@@ -2193,14 +2184,14 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
 
     if (!pseudoOk) {
       console.log("[DEBUG] ERREUR: Pseudo manquant");
-      setErr(t("errors.enterPseudoToCreate"));
+      setErr("Entre un pseudo pour créer un groupe.");
       scrollFocus(pseudoRef);
       return;
     }
 
     if (!groupName.trim()) {
       console.log("[DEBUG] ERREUR: Nom de groupe manquant");
-      setErr(t("errors.enterGroupName"));
+      setErr("Entre un nom de groupe (ex: coloc).");
       scrollFocus(groupNameRef);
       return;
     }
@@ -2209,7 +2200,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
     createGroup();
   }}
 >
-  {isCreating ? t("group.creating") : t("group.create")}
+  {isCreating ? "⏳ Création en cours..." : "➕ Créer un nouveau groupe"}
 </button>
                       </div>
                     ) : (
@@ -2247,7 +2238,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                             (userProfile?.pseudo || "").trim();
 
                           if (!pseudoOk) {
-                            setErr(t("errors.enterPseudoToJoin"));
+                            setErr("Entre un pseudo pour rejoindre un groupe.");
                             scrollFocus(pseudoRef);
                             return;
                           }
@@ -2326,7 +2317,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
             {/* ✅ sur les autres tabs : barre d'avatars + bouton logout + erreurs */}
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button style={ui.buttonGhost} onClick={logout}>
-                {t('auth.logout')}
+                🚪 Déconnexion
               </button>
             </div>
 

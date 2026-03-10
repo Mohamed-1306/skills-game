@@ -1,0 +1,11 @@
+{
+  "app": {"title": "SKILLS GAME", "subtitle": "Herausforderungen, Prävention & Spaß ⛷️"},
+  "auth": {"email": "E-Mail", "password": "Passwort", "passwordMin": "Passwort (min 6 Zeichen)", "login": "Anmelden", "signup": "Registrieren", "createAccount": "Konto erstellen", "alreadyHaveAccount": "Ich habe bereits ein Konto", "logout": "Abmelden", "loading": "Laden..."},
+  "profile": {"title": "Mein Profil", "pseudo": "Dein Nickname", "pseudoPlaceholder": "Dein Nickname (2–18 Zeichen)", "choosePseudo": "Wähle deinen Nickname", "mustCreatePseudo": "Du musst einen Nickname erstellen.", "changePseudo": "Nickname ändern", "validatePseudo": "Nickname bestätigen", "changeAvatar": "Avatar ändern", "avatarUpdated": "Avatar aktualisiert"},
+  "group": {"title": "Gruppe", "name": "Gruppenname (z.B. Mitbewohner)", "create": "Neue Gruppe erstellen", "creating": "Erstellen...", "join": "Gruppe beitreten", "scan": "QR scannen", "inviteCode": "Einladungscode (einfügen oder QR)", "copyLink": "Link kopieren", "linkCopied": "Link kopiert", "share": "Teilen", "shareReady": "Teilen bereit", "members": "Mitglieder", "member": "Mitglied", "groupCreated": "Gruppe erstellt", "groupJoined": "Gruppe beigetreten", "alreadyInGroup": "Du bist bereits in einer Gruppe.", "notInGroupYet": "Noch nicht in einer Gruppe", "joinWithCode": "Trete einer Gruppe bei.", "qrInvite": "QR (Einladungscode)", "clear": "Löschen", "inviteDetected": "Einladung erkannt"},
+  "challenge": {"send": "Herausforderung senden", "sent": "Herausforderung gesendet", "newReceived": "Neue Herausforderung", "validated": "Herausforderung bestätigt!", "failed": "Herausforderung fehlgeschlagen"},
+  "nav": {"home": "Startseite", "challenges": "Meine Herausforderungen", "hand": "Meine Hand", "feed": "Feed", "more": "Mehr"},
+  "stats": {"points": "Pkt", "profile": "Profil", "stats": "Statistiken"},
+  "common": {"error": "Fehler", "close": "Schließen"},
+  "errors": {"notConnected": "Nicht verbunden.", "enterPseudo": "Gib einen Nickname ein.", "pseudoTooShort": "Nickname zu kurz.", "pseudoTooLong": "Nickname zu lang (max 18).", "enterGroupName": "Gib einen Gruppennamen ein.", "alreadyInGroup": "Du bist bereits in einer Gruppe.", "invalidInvite": "Füge den Code ein.", "enterPseudoToCreate": "Gib einen Nickname ein.", "enterPseudoToJoin": "Gib einen Nickname ein."}
+}
