@@ -1,11 +1,15 @@
 // src/components/BottomNav.jsx
+import { useTranslation } from 'react-i18next';
+
 export default function BottomNav({ tab, setTab }) {
+  const { t } = useTranslation();
+  
   const items = [
-    { key: "leaderboard", label: "Accueil", icon: "🏠" },
-    { key: "challenges", label: "Mes défis", icon: "✅" },
-    { key: "hand", label: "Ma main", icon: "🃏" },
-    { key: "feed", label: "Feed", icon: "📰" },
-    { key: "more", label: "Plus", icon: "⋯" },
+    { key: "leaderboard", label: t('nav.home'), icon: "🏠" },
+    { key: "challenges", label: t('nav.challenges'), icon: "✅" },
+    { key: "hand", label: t('nav.hand'), icon: "🃏" },
+    { key: "feed", label: t('nav.feed'), icon: "📰" },
+    { key: "more", label: t('nav.more'), icon: "⋯" },
   ];
 
   return (

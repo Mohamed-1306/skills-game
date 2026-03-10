@@ -1640,7 +1640,7 @@ useEffect(() => {
           <h1 style={{ ...ui.title, margin: "0" }}>SKILLS GAME</h1>
 
           <p style={{ ...ui.subtitle, margin: "6px 0 0" }}>
-            Défis, prévention & fun sur les pistes 🎿
+            {t("app.subtitle")}
           </p>
 
           {activeGroupId ? (
@@ -2261,7 +2261,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                           joinGroup();
                         }}
                       >
-                        🔗 Rejoindre un groupe
+                        {"🔗 " + t("group.join")}
                       </button>
 
                       <button
@@ -2271,7 +2271,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                         }}
                         onClick={() => setScanOpen(true)}
                       >
-                        📷 Scanner un QR
+                        {"📷 " + t("group.scan")}
                       </button>
 
                       {inviteCode ? (
@@ -2521,10 +2521,9 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
           </div>
         ) : (
           <div style={{ ...ui.panel, marginTop: 16, color: "#08304d" }}>
-            <b>Pas encore dans un groupe</b>
+            <b>{t("group.notInGroupYet")}</b>
             <div style={{ marginTop: 8, opacity: 0.9 }}>
-              Rejoins un groupe avec un code/QR (ou crée-en un si tu n’en as
-              pas).
+              {t("group.joinWithCode")}
             </div>
           </div>
         )}
