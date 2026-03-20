@@ -1,11 +1,111 @@
 {
   "app": {"title": "SKILLS GAME", "subtitle": "Challenges, prevention & fun on the slopes ⛷️"},
-  "auth": {"email": "Email", "password": "Password", "passwordMin": "Password (min 6 characters)", "login": "Log in", "signup": "Sign up", "createAccount": "Create my account", "alreadyHaveAccount": "I already have an account", "logout": "Logout", "loading": "Loading..."},
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "passwordMin": "Password (min 6 characters)",
+    "login": "Log in",
+    "signup": "Sign up",
+    "createAccount": "Create my account",
+    "alreadyHaveAccount": "I already have an account",
+    "logout": "Logout",
+    "loading": "Loading...",
+    "connectToContinue": "Sign in to continue.",
+    "forgotPassword": "Forgot password",
+    "continueWithGoogle": "Continue with Google",
+    "accountCreated": "✅ Account created. Check your email then sign in."
+  },
   "profile": {"title": "My profile", "pseudo": "Your nickname", "pseudoPlaceholder": "Your nickname (2–18 characters)", "choosePseudo": "Choose your nickname", "mustCreatePseudo": "You must create a nickname to enter the app.", "changePseudo": "Change nickname", "validatePseudo": "Validate my nickname", "changeAvatar": "Change my avatar", "avatarUpdated": "Avatar updated"},
   "group": {"title": "Group", "name": "Group name (e.g., roommates)", "create": "Create a new group", "creating": "Creating...", "join": "Join a group", "scan": "Scan QR", "inviteCode": "Invitation code (paste or scan QR)", "copyLink": "Copy link", "linkCopied": "Link copied", "share": "Share", "shareReady": "Share ready", "members": "Members", "member": "member", "groupCreated": "Group created", "groupJoined": "Group joined", "alreadyInGroup": "You're already in a group. (Only 1 group allowed)", "notInGroupYet": "Not in a group yet", "joinWithCode": "Join a group with a code/QR (or create one if you don't have any).", "qrInvite": "QR (invitation code)", "clear": "Clear", "inviteDetected": "Invitation detected: after validation, you will automatically join the group"},
   "challenge": {"send": "Send challenge", "sent": "Challenge sent", "newReceived": "New challenge received", "validated": "Challenge validated + points!", "failed": "Challenge failed"},
   "nav": {"home": "Home", "challenges": "My challenges", "hand": "My hand", "feed": "Feed", "more": "More"},
   "stats": {"points": "pts", "profile": "Profile", "stats": "Stats"},
-  "common": {"error": "Error", "close": "Close"},
+  "leaderboard": {"title": "Leaderboard", "bestChallenges": "Best number of validated challenges", "pointLevel": "points level"},
+  "ranking": {"or": "Gold Skier", "argent": "Silver Skier", "bronze": "Bronze Skier", "carton": "Cardboard Skier", "vert": "Green Skier"},
+  "members": {"title": "Members"},
+  "hand": {"imageBroken": "Image not found / broken URL", "noCards": "No cards in hand"},
+  "home": {
+    "goal": "The goal: challenge each other on the slopes, earn points, and finish the trip with the best score 🏔️",
+    "cards": {
+      "title": "The cards",
+      "rule1": "There are <b>15 cards</b>: 5 🟩 Challenge, 5 🟦 Good conduct, 5 🟥 Constraint.",
+      "rule2": "Each day, you receive <b>3 new cards</b> (1 of each color), different ones.",
+      "rule3": "You keep your cards as long as you don't use them: you can have more than 3 if you play well."
+    },
+    "send": {
+      "title": "Send a challenge",
+      "rule1": "You choose a card from <b>My hand</b>, then send it to a member.",
+      "rule2": "The recipient sees <b>who</b> sent them the challenge.",
+      "rule3": "Anti-spam rule: you can't send <b>2 challenges of the same type</b> to the same person on the same day (e.g., 2 good conducts)."
+    },
+    "result": {
+      "title": "Success / Failure",
+      "validated": "If the challenge is validated, you earn points:",
+      "challenge": "🟩 Challenge: <b>200</b> pts",
+      "goodConduct": "🟦 Good conduct: <b>250</b> pts",
+      "constraint": "🟥 Constraint: <b>350</b> pts",
+      "failed": "If the challenge is <b>failed</b>, you don't earn points.",
+      "daily": "So everyone can play: you always have at least <b>3 cards per day</b> to send."
+    },
+    "ranking": {
+      "title": "Ranking & badges",
+      "badgesDepend": "Badges depend on points:",
+      "gold": "🥇 Gold Skier: 3200+ pts",
+      "silver": "🥈 Silver Skier: 2400+ pts",
+      "bronze": "🥉 Bronze Skier: 1500+ pts",
+      "cardboard": "📦 Cardboard Skier: less than 1500 pts",
+      "multipleOr": "In a group, multiple people can be \"GOLD\": the <b>score</b> decides.",
+      "greenBonus": "Bonus: whoever has the most <b>eco</b> challenges becomes <b>🌱 Green Skier</b>."
+    },
+    "membersSubtitle": "Find all the riders in your group and see who's leading."
+  },
+  "feed": {
+    "title": "Group feed",
+    "publishPhoto": "Publish a photo",
+    "openCamera": "Open camera / choose a photo",
+    "preview": "Preview",
+    "uploading": "Uploading...",
+    "publishing": "Publishing...",
+    "publish": "Publish",
+    "cancel": "Cancel",
+    "noPhotos": "No photos published yet.",
+    "notMember": "You're not a member of this group (member doc missing).",
+    "mustBeInGroup": "You must be in the group",
+    "choosePhoto": "Choose a photo"
+  },
+  "sendCard": {
+    "noCards": "You have no cards in hand",
+    "chooseCard": "Choose a card",
+    "chooseCardPlaceholder": "Choose a card…",
+    "card": "Card",
+    "tapToOpen": "Tap to open selection",
+    "noImage": "(no image)",
+    "selected": "selected",
+    "noCardsInHand": "You have no cards in hand.",
+    "chooseRecipient": "Choose a recipient…",
+    "tapToChange": "Tap to change",
+    "tapToOpenList": "Tap to open the list",
+    "sendButton": "Send"
+  },
+  "incoming": {
+    "subtitle": "You receive challenges that others send you here.",
+    "noChallenges": "No pending challenges at the moment ❄️",
+    "challengeBadge": "🟩 Challenge",
+    "goodConductBadge": "🟦 Good conduct",
+    "constraintBadge": "🟥 Constraint",
+    "cardBadge": "🃏 Card",
+    "challenge": "Challenge",
+    "openCard": "Open the card to read the challenge.",
+    "validated": "Challenge validated",
+    "failed": "Challenge failed"
+  },
+  "history": {
+    "title": "History",
+    "noChallenges": "No completed challenges yet",
+    "success": "Success",
+    "failed": "Failed",
+    "proof": "Proof"
+  },
+  "common": {"error": "Error", "close": "Close", "skier": "Skier"},
   "errors": {"notConnected": "Not connected. Please log in first.", "enterPseudo": "Enter a nickname.", "pseudoTooShort": "Nickname too short.", "pseudoTooLong": "Nickname too long (max 18).", "enterGroupName": "Enter a group name (e.g., roommates).", "alreadyInGroup": "You're already in a group.", "invalidInvite": "Paste or scan the invitation code.", "enterPseudoToCreate": "Enter a nickname to create a group.", "enterPseudoToJoin": "Enter a nickname to join a group."}
 }

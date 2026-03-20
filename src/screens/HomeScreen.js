@@ -1,5 +1,6 @@
 // src/screens/HomeScreen.js
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import Members from "../components/Members";
 
 function Section({ title, children, defaultOpen = false }) {
@@ -44,6 +45,7 @@ function Section({ title, children, defaultOpen = false }) {
 }
 
 export default function HomeScreen({ me, members }) {
+  const { t } = useTranslation();
   const membersCount = Array.isArray(members) ? members.length : 0;
 
   const cardStyle = {
@@ -108,111 +110,73 @@ export default function HomeScreen({ me, members }) {
 
   return (
     <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
-      {/* 🧭 RÈGLES DU JEU */}
       <div style={cardStyle}>
         <div style={headerRow}>
-          <h2 style={titleStyle}>🏠 Accueil</h2>
+          <h2 style={titleStyle}>🏠 {t('nav.home')}</h2>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span style={pill}>🏆 {myPts} pts</span>
+            <span style={pill}>🏆 {myPts} {t('stats.points')}</span>
             <span style={pill}>✅ {myStats.success || 0}</span>
             <span style={pill}>🌱 {myStats.eco || 0}</span>
           </div>
         </div>
 
         <div style={sub}>
-          Le but : se lancer des défis sur les pistes, gagner des points, et
-          finir le séjour avec le meilleur score 🏔️
+          {t('home.goal')}
         </div>
 
         <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-          <Section title="🎴 Les cartes" defaultOpen>
+          <Section title={"🎴 " + t('home.cards.title')} defaultOpen>
             <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.45 }}>
-              <li>
-                Il y a <b>15 cartes</b> : 5 🟩 Challenge, 5 🟦 Bonne conduite, 5
-                🟥 Contrainte.
-              </li>
-              <li>
-                Chaque jour, tu reçois <b>3 nouvelles cartes</b> (1 de chaque
-                couleur), différentes.
-              </li>
-              <li>
-                Tu gardes tes cartes tant que tu ne les utilises pas : tu peux
-                donc en avoir plus que 3 si tu joues bien.
-              </li>
+              <li dangerouslySetInnerHTML={{ __html: t('home.cards.rule1') }} />
+              <li dangerouslySetInnerHTML={{ __html: t('home.cards.rule2') }} />
+              <li dangerouslySetInnerHTML={{ __html: t('home.cards.rule3') }} />
             </ul>
           </Section>
 
-          <Section title="📮 Envoyer un défi">
+          <Section title={"📮 " + t('home.send.title')}>
             <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.45 }}>
-              <li>
-                Tu choisis une carte dans <b>Ma main</b>, puis tu l’envoies à un
-                membre.
-              </li>
-              <li>
-                Le destinataire voit <b>qui</b> lui a envoyé le défi.
-              </li>
-              <li>
-                Règle anti-spam : tu ne peux pas envoyer{" "}
-                <b>2 défis du même type</b> à la même personne le même jour (ex
-                : 2 bonnes conduites).
-              </li>
+              <li dangerouslySetInnerHTML={{ __html: t('home.send.rule1') }} />
+              <li dangerouslySetInnerHTML={{ __html: t('home.send.rule2') }} />
+              <li dangerouslySetInnerHTML={{ __html: t('home.send.rule3') }} />
             </ul>
           </Section>
 
-          <Section title="✅ Réussite / ❌ Échec">
+          <Section title={"✅ " + t('home.result.title')}>
             <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.45 }}>
               <li>
-                Si le défi est <b>validé</b>, tu gagnes des points :
+                {t('home.result.validated')}
                 <ul style={{ marginTop: 6, paddingLeft: 18 }}>
-                  <li>
-                    🟩 Challenge : <b>200</b> pts
-                  </li>
-                  <li>
-                    🟦 Bonne conduite : <b>250</b> pts
-                  </li>
-                  <li>
-                    🟥 Contrainte : <b>350</b> pts
-                  </li>
+                  <li dangerouslySetInnerHTML={{ __html: t('home.result.challenge') }} />
+                  <li dangerouslySetInnerHTML={{ __html: t('home.result.goodConduct') }} />
+                  <li dangerouslySetInnerHTML={{ __html: t('home.result.constraint') }} />
                 </ul>
               </li>
-              <li>
-                Si le défi est <b>échoué</b>, tu ne gagnes pas de points.
-              </li>
-              <li>
-                Pour que tout le monde puisse jouer : tu as toujours au moins
-                <b> 3 cartes par jour</b> pour en envoyer.
-              </li>
+              <li dangerouslySetInnerHTML={{ __html: t('home.result.failed') }} />
+              <li dangerouslySetInnerHTML={{ __html: t('home.result.daily') }} />
             </ul>
           </Section>
 
-          <Section title="🏆 Classement & badges">
+          <Section title={"🏆 " + t('home.ranking.title')}>
             <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.45 }}>
               <li>
-                Les badges dépendent des <b>points</b> :
+                {t('home.ranking.badgesDepend')}
                 <ul style={{ marginTop: 6, paddingLeft: 18 }}>
-                  <li>🥇 Skieur OR : 3200+ pts</li>
-                  <li>🥈 Skieur ARGENT : 2400+ pts</li>
-                  <li>🥉 Skieur BRONZE : 1500+ pts</li>
-                  <li>📦 Skieur CARTON : moins de 1500 pts</li>
+                  <li>{t('home.ranking.gold')}</li>
+                  <li>{t('home.ranking.silver')}</li>
+                  <li>{t('home.ranking.bronze')}</li>
+                  <li>{t('home.ranking.cardboard')}</li>
                 </ul>
               </li>
-              <li>
-                Dans un groupe, plusieurs personnes peuvent être “OR” : c’est le
-                <b> score</b> qui départage.
-              </li>
-              <li>
-                Bonus : celui/celle qui a le plus de défis <b>éco</b> devient{" "}
-                <b>🌱 Skieur VERT</b>.
-              </li>
+              <li dangerouslySetInnerHTML={{ __html: t('home.ranking.multipleOr') }} />
+              <li dangerouslySetInnerHTML={{ __html: t('home.ranking.greenBonus') }} />
             </ul>
           </Section>
         </div>
       </div>
 
-      {/* 👥 MEMBRES */}
       <div style={cardStyle}>
         <div style={headerRow}>
-          <h2 style={titleStyle}>👥 Membres</h2>
+          <h2 style={titleStyle}>👥 {t('members.title')}</h2>
           <div style={badge}>
             <span style={{ fontSize: 16, lineHeight: 1 }}>⛷️</span>
             <span>{membersCount}</span>
@@ -220,7 +184,7 @@ export default function HomeScreen({ me, members }) {
         </div>
 
         <div style={sub}>
-          Retrouve tous les riders de ton groupe et vois qui est en tête.
+          {t('home.membersSubtitle')}
         </div>
 
         <div style={{ marginTop: 14 }}>

@@ -1,5 +1,6 @@
 // src/components/History.jsx
 import { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   collection,
   limit,
@@ -10,6 +11,7 @@ import {
 import { db } from "../firebase";
 
 export default function History({ user, groupCode, cards }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [localErr, setLocalErr] = useState("");
 
@@ -43,7 +45,7 @@ export default function History({ user, groupCode, cards }) {
 
   return (
     <div>
-      <h3 style={{ marginTop: 0 }}>🧾 Historique</h3>
+      <h3 style={{ marginTop: 0 }}>🧾 {t('history.title')}</h3>
 
       {localErr && (
         <div
@@ -60,7 +62,7 @@ export default function History({ user, groupCode, cards }) {
 
       {items.length === 0 ? (
         <div style={{ opacity: 0.75 }}>
-          🎿 Aucun défi terminé pour l’instant
+          🎿 {t('history.noChallenges')}
         </div>
       ) : (
         <div style={{ display: "grid", gap: 14 }}>
@@ -71,7 +73,7 @@ export default function History({ user, groupCode, cards }) {
             const title =
               c?.title || c?.text || c?.name || prettyFromId(ch.cardId);
             const type =
-              c?.type || c?.theme || c?.category || c?.categorie || "carte";
+              c?.type || c?.theme || c?.category || c?.categorie || t('sendCard.card').toLowerCase();
 
             return (
               <div
@@ -93,10 +95,10 @@ export default function History({ user, groupCode, cards }) {
                   }}
                 >
                   <div style={{ fontWeight: 900 }}>
-                    {success ? "✅ Réussi" : "❌ Échoué"}
+                    {success ? `✅ ${t('history.success')}` : `❌ ${t('history.failed')}`}
                   </div>
                   <div style={{ opacity: 0.75, fontWeight: 800 }}>
-                    {ch.fromName || "Skieur"} → {ch.toName || "Skieur"}
+                    {ch.fromName || t('common.skier')} → {ch.toName || t('common.skier')}
                   </div>
                 </div>
 
@@ -123,7 +125,7 @@ export default function History({ user, groupCode, cards }) {
                 {ch.photoUrl && (
                   <div style={{ marginTop: 12 }}>
                     <div style={{ fontWeight: 900, opacity: 0.85 }}>
-                      Preuve :
+                      {t('history.proof')} :
                     </div>
                     <img
                       src={ch.photoUrl}

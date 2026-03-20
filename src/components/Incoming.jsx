@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 
 function cleanId(id) {
   return String(id || "")
@@ -123,6 +124,8 @@ export default function Incoming({
   onResolve,
   groupCode,
 }) {
+  const { t } = useTranslation();
+  
   const cardsById = useMemo(() => {
     const m = new Map();
     (cards || []).forEach((c) => m.set(cleanId(c.id), c));
@@ -141,9 +144,9 @@ export default function Incoming({
     <div style={ui.wrap} id="incoming">
       <div style={ui.titleRow}>
         <div>
-          <h2 style={ui.h2}>✅ Mes défis</h2>
+          <h2 style={ui.h2}>✅ {t('nav.challenges')}</h2>
           <p style={ui.sub}>
-            Tu reçois ici les défis que les autres t’envoient.
+            {t('incoming.subtitle')}
           </p>
         </div>
         {groupCode ? (
@@ -152,7 +155,7 @@ export default function Incoming({
       </div>
 
       {list.length === 0 ? (
-        <div style={ui.empty}>Aucun défi en attente pour le moment ❄️</div>
+        <div style={ui.empty}>{t('incoming.noChallenges')}</div>
       ) : (
         list.map((ch) => {
           const card = cardsById.get(cleanId(ch.cardId)) || null;
@@ -164,12 +167,11 @@ export default function Incoming({
           const pts = pointsForType(type);
 
           const from = memberById.get(String(ch.fromUid)) || null;
-          const fromPseudo = from?.pseudo || ch.fromName || "Skieur";
+          const fromPseudo = from?.pseudo || ch.fromName || t('common.skier');
           const fromAvatar = from?.avatarUrl || "";
 
           return (
             <div key={ch.id} style={ui.card}>
-              {/* Expéditeur */}
               <div style={ui.fromRow}>
                 {fromAvatar ? (
                   <img src={fromAvatar} alt="" style={ui.avatar} />
@@ -183,41 +185,38 @@ export default function Incoming({
                 <div style={ui.fromName}>{fromPseudo}</div>
               </div>
 
-              {/* Badges */}
               <div style={ui.badgeRow}>
                 <div style={ui.badge}>
                   {type === "challenge"
-                    ? "🟩 Challenge"
+                    ? t('incoming.challengeBadge')
                     : type === "bonne_conduite"
-                    ? "🟦 Bonne conduite"
+                    ? t('incoming.goodConductBadge')
                     : type === "contrainte"
-                    ? "🟥 Contrainte"
-                    : "🃏 Carte"}
+                    ? t('incoming.constraintBadge')
+                    : t('incoming.cardBadge')}
                 </div>
-                <div style={ui.badge}>🏆 {pts} pts</div>
+                <div style={ui.badge}>🏆 {pts} {t('stats.points')}</div>
               </div>
 
-              {/* Contenu carte */}
               <div>
                 <h3 style={ui.cardTitle}>
-                  {card?.title || card?.name || "Défi"}
+                  {card?.title || card?.name || t('incoming.challenge')}
                 </h3>
                 <p style={ui.cardText}>
                   {card?.text ||
                     card?.description ||
                     card?.desc ||
-                    "Ouvre la carte pour lire le défi."}
+                    t('incoming.openCard')}
                 </p>
               </div>
 
-              {/* Actions */}
               <div style={ui.actions}>
                 <button
                   type="button"
                   style={{ ...ui.btn, ...ui.btnSuccess }}
                   onClick={() => onResolve?.(ch.id, "success")}
                 >
-                  ✅ Défi validé
+                  ✅ {t('incoming.validated')}
                 </button>
 
                 <button
@@ -225,7 +224,7 @@ export default function Incoming({
                   style={{ ...ui.btn, ...ui.btnFail }}
                   onClick={() => onResolve?.(ch.id, "fail")}
                 >
-                  😅 Défi échoué
+                  😅 {t('incoming.failed')}
                 </button>
               </div>
             </div>

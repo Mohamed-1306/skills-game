@@ -1,9 +1,12 @@
-// src/components/Members.jsx
+import { useTranslation } from 'react-i18next';
+
 export default function Members({ members = [] }) {
+  const { t } = useTranslation();
+  
   return (
     <div>
       <div style={{ fontWeight: 950, marginBottom: 10, color: "#08304d" }}>
-        👥 Membres ({members.length})
+        👥 {t('members.title')} ({members.length})
       </div>
 
       <div style={{ display: "grid", gap: 10 }}>
@@ -54,7 +57,7 @@ export default function Members({ members = [] }) {
 
               <div>
                 <div style={{ fontWeight: 950, color: "#08304d" }}>
-                  {m.pseudo || "Skieur"}
+                  {m.pseudo || t('common.skier')}
                 </div>
                 <div style={{ fontSize: 12, opacity: 0.75 }}>
                   {m.points || 0} pts

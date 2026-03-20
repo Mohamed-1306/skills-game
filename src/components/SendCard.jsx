@@ -1,6 +1,7 @@
 // src/components/SendCard.jsx
 
 import { useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 // ---------- helpers (local)
 function cleanId(id) {
@@ -50,6 +51,8 @@ function getCardLabel(card, idFallback) {
 
 // ---------- UI: CardPicker
 function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
+  const { t } = useTranslation();
+  
   const handIds = useMemo(
     () => (Array.isArray(hand) ? hand : []).map(cleanId).filter(Boolean),
     [hand]
@@ -77,7 +80,6 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
 
   return (
     <div style={{ display: "grid", gap: 10 }}>
-      {/* Button / field */}
       <button
         type="button"
         disabled={disabled}
@@ -95,7 +97,7 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
           gap: 10,
           justifyContent: "space-between",
         }}
-        title={disabled ? "Tu n’as aucune carte en main" : "Choisir une carte"}
+        title={disabled ? t('sendCard.noCards') : t('sendCard.chooseCard')}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span
@@ -110,15 +112,15 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
           />
           <div style={{ display: "grid", lineHeight: 1.2 }}>
             <div style={{ fontWeight: 900 }}>
-              {selected.id ? selectedLabel : "Choisir une carte…"}
+              {selected.id ? selectedLabel : t('sendCard.chooseCardPlaceholder')}
             </div>
             {selected.id ? (
               <div style={{ opacity: 0.75, fontWeight: 800, fontSize: 13 }}>
-                {selectedType || "Carte"}
+                {selectedType || t('sendCard.card')}
               </div>
             ) : (
               <div style={{ opacity: 0.6, fontWeight: 700, fontSize: 13 }}>
-                Tape pour ouvrir la sélection
+                {t('sendCard.tapToOpen')}
               </div>
             )}
           </div>
@@ -127,7 +129,6 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
         <div style={{ opacity: 0.75, fontWeight: 900 }}>▾</div>
       </button>
 
-      {/* Dropdown */}
       {open && !disabled ? (
         <div
           style={{
@@ -175,7 +176,6 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
                     boxShadow: isSelected ? "0 10px 22px rgba(0,0,0,0.10)" : "",
                   }}
                 >
-                  {/* Image */}
                   <div
                     style={{
                       borderRadius: 14,
@@ -216,12 +216,11 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
                           opacity: 0.65,
                         }}
                       >
-                        (pas d’image)
+                        {t('sendCard.noImage')}
                       </div>
                     )}
                   </div>
 
-                  {/* Text */}
                   <div style={{ display: "grid", gap: 6 }}>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <span
@@ -247,7 +246,7 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
                             background: color,
                           }}
                         />
-                        {type || "Carte"}
+                        {type || t('sendCard.card')}
                       </span>
                       {isSelected ? (
                         <span
@@ -262,7 +261,7 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
                             fontSize: 12,
                           }}
                         >
-                          ✓ sélectionnée
+                          ✓ {t('sendCard.selected')}
                         </span>
                       ) : null}
                     </div>
@@ -295,7 +294,7 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
                 cursor: "pointer",
               }}
             >
-              Fermer
+              {t('common.close')}
             </button>
           </div>
         </div>
@@ -316,6 +315,8 @@ export default function SendCard({
   setToUid,
   onSend,
 }) {
+  const { t } = useTranslation();
+  
   const rawIds = Array.isArray(hand) ? hand : [];
   const ids = rawIds.map(cleanId).filter(Boolean);
   const handEmpty = ids.length === 0;
@@ -329,16 +330,15 @@ export default function SendCard({
 
   return (
     <div>
-      <h3 style={{ marginTop: 0 }}>📮 Envoyer un défi</h3>
+      <h3 style={{ marginTop: 0 }}>📮 {t('challenge.send')}</h3>
 
       {handEmpty && (
         <div style={{ marginBottom: 10, fontWeight: 800, opacity: 0.8 }}>
-          ❄️ Tu n’as aucune carte en main.
+          ❄️ {t('sendCard.noCardsInHand')}
         </div>
       )}
 
       <div style={{ display: "grid", gap: 10 }}>
-        {/* ✅ Card picker (avec images + couleur) */}
         <CardPicker
           hand={hand}
           cards={cards}
@@ -347,9 +347,7 @@ export default function SendCard({
           disabled={handEmpty}
         />
 
-        {/* DESTINATAIRE (photo + pseudo) */}
         <div style={{ display: "grid", gap: 10 }}>
-          {/* champ “comme un select” */}
           <button
             type="button"
             onClick={() => setOpenTo((v) => !v)}
@@ -371,7 +369,7 @@ export default function SendCard({
               {selectedTo?.avatarUrl ? (
                 <img
                   src={selectedTo.avatarUrl}
-                  alt={selectedTo.pseudo || "Skieur"}
+                  alt={selectedTo.pseudo || t('common.skier')}
                   style={{
                     width: 36,
                     height: 36,
@@ -401,13 +399,13 @@ export default function SendCard({
               <div style={{ display: "grid", lineHeight: 1.2 }}>
                 <div style={{ fontWeight: 900 }}>
                   {selectedTo
-                    ? selectedTo.pseudo || "Skieur"
-                    : "Choisir un destinataire…"}
+                    ? selectedTo.pseudo || t('common.skier')
+                    : t('sendCard.chooseRecipient')}
                 </div>
                 <div style={{ opacity: 0.6, fontWeight: 700, fontSize: 13 }}>
                   {selectedTo
-                    ? "Tape pour changer"
-                    : "Tape pour ouvrir la liste"}
+                    ? t('sendCard.tapToChange')
+                    : t('sendCard.tapToOpenList')}
                 </div>
               </div>
             </div>
@@ -415,7 +413,6 @@ export default function SendCard({
             <div style={{ opacity: 0.75, fontWeight: 900 }}>▾</div>
           </button>
 
-          {/* dropdown visuel */}
           {openTo ? (
             <div
               style={{
@@ -461,7 +458,7 @@ export default function SendCard({
                       {m.avatarUrl ? (
                         <img
                           src={m.avatarUrl}
-                          alt={m.pseudo || m.displayName || "Skieur"}
+                          alt={m.pseudo || m.displayName || t('common.skier')}
                           style={{
                             width: 44,
                             height: 44,
@@ -489,7 +486,7 @@ export default function SendCard({
                       )}
 
                       <div style={{ fontWeight: 950 }}>
-                        {m.pseudo || m.displayName || "Skieur"}
+                        {m.pseudo || m.displayName || t('common.skier')}
                         {m.id === toUid ? (
                           <span style={{ marginLeft: 8, opacity: 0.7 }}>
                             {" "}
@@ -523,7 +520,7 @@ export default function SendCard({
                     cursor: "pointer",
                   }}
                 >
-                  Effacer
+                  {t('group.clear')}
                 </button>
 
                 <button
@@ -538,7 +535,7 @@ export default function SendCard({
                     cursor: "pointer",
                   }}
                 >
-                  Fermer
+                  {t('common.close')}
                 </button>
               </div>
             </div>
@@ -559,11 +556,8 @@ export default function SendCard({
             opacity: canSend ? 1 : 0.6,
           }}
         >
-          🛷 Envoyer
+          🛷 {t('sendCard.sendButton')}
         </button>
-
-        {/* (optionnel) debug si jamais tu veux vérifier que l'image arrive bien */}
-        {selectedCard && !selectedCard.imageUrl ? null : null}
       </div>
     </div>
   );

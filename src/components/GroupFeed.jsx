@@ -1,5 +1,6 @@
 // src/components/GroupFeed.jsx
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   collection,
   doc,
@@ -30,6 +31,7 @@ function shortUid(uid) {
 }
 
 export default function GroupFeed({ groupId, user, me }) {
+  const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [members, setMembers] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -37,7 +39,6 @@ export default function GroupFeed({ groupId, user, me }) {
   const [preview, setPreview] = useState(null);
   const [err, setErr] = useState("");
 
-  // map uid -> member data (avatarUrl/pseudo/points)
   const memberByUid = useMemo(() => {
     const m = new Map();
     (members || []).forEach((x) => m.set(x.id, x));
@@ -50,7 +51,6 @@ export default function GroupFeed({ groupId, user, me }) {
     };
   }, [preview]);
 
-  // 🔥 Listen posts
   useEffect(() => {
     if (!groupId || !user) return;
 
@@ -67,7 +67,6 @@ export default function GroupFeed({ groupId, user, me }) {
     );
   }, [groupId, user?.uid]);
 
-  // 🔥 Listen members (to display live avatars/pseudos)
   useEffect(() => {
     if (!groupId || !user) return;
 
@@ -96,16 +95,14 @@ export default function GroupFeed({ groupId, user, me }) {
     const checkSnap = await getDoc(checkRef);
     console.log("MEMBER DOC EXISTS?", groupId, user.uid, checkSnap.exists());
     if (!checkSnap.exists()) {
-      throw new Error(
-        "Tu n'es pas membre de ce groupe (doc members manquant)."
-      );
+      throw new Error(t('feed.notMember'));
     }
 
     setErr("");
     if (!groupId) return;
     if (!user) return;
-    if (!me) return setErr("Tu dois être dans le groupe");
-    if (!file) return setErr("Choisis une photo");
+    if (!me) return setErr(t('feed.mustBeInGroup'));
+    if (!file) return setErr(t('feed.choosePhoto'));
 
     setBusy(true);
 
@@ -130,7 +127,7 @@ export default function GroupFeed({ groupId, user, me }) {
       console.log("[FEED] writing Firestore post…");
       await setDoc(postRef, {
         fromUid: user.uid,
-        fromName: me.pseudo || me.displayName || "Skieur",
+        fromName: me.pseudo || me.displayName || t('common.skier'),
         type: "photo",
         mediaUrl,
         createdAt: serverTimestamp(),
@@ -148,7 +145,7 @@ export default function GroupFeed({ groupId, user, me }) {
 
   return (
     <div style={{ display: "grid", gap: 14, paddingBottom: 120 }}>
-      <h3 style={{ marginTop: 0 }}>📸 Feed du groupe</h3>
+      <h3 style={{ marginTop: 0 }}>📸 {t('feed.title')}</h3>
 
       <div
         style={{
@@ -159,7 +156,7 @@ export default function GroupFeed({ groupId, user, me }) {
         }}
       >
         <div style={{ fontWeight: 900, marginBottom: 10 }}>
-          Publier une photo
+          {t('feed.publishPhoto')}
         </div>
 
         <label
@@ -173,7 +170,7 @@ export default function GroupFeed({ groupId, user, me }) {
             cursor: "pointer",
           }}
         >
-          📷 Ouvrir la caméra / choisir une photo
+          📷 {t('feed.openCamera')}
           <input
             type="file"
             accept="image/*"
@@ -186,7 +183,7 @@ export default function GroupFeed({ groupId, user, me }) {
         {preview && (
           <div style={{ marginTop: 12 }}>
             <div style={{ fontWeight: 800, opacity: 0.8, marginBottom: 6 }}>
-              Aperçu :
+              {t('feed.preview')} :
             </div>
             <img
               src={preview}
@@ -201,7 +198,7 @@ export default function GroupFeed({ groupId, user, me }) {
             />
             {busy ? (
               <div style={{ fontWeight: 900, opacity: 0.8 }}>
-                Upload en cours…
+                {t('feed.uploading')}
               </div>
             ) : null}
 
@@ -209,7 +206,7 @@ export default function GroupFeed({ groupId, user, me }) {
               <button
                 type="button"
                 onClick={async () => {
-                  console.log("CLICK PUBLISH"); // debug
+                  console.log("CLICK PUBLISH");
                   await publishPhoto();
                 }}
                 disabled={busy}
@@ -224,7 +221,7 @@ export default function GroupFeed({ groupId, user, me }) {
                   opacity: busy ? 0.6 : 1,
                 }}
               >
-                ✅ {busy ? "Publication…" : "Publier"}
+                ✅ {busy ? t('feed.publishing') : t('feed.publish')}
               </button>
 
               <button
@@ -240,7 +237,7 @@ export default function GroupFeed({ groupId, user, me }) {
                   opacity: busy ? 0.6 : 1,
                 }}
               >
-                🗑️ Annuler
+                🗑️ {t('feed.cancel')}
               </button>
             </div>
           </div>
@@ -264,49 +261,14 @@ export default function GroupFeed({ groupId, user, me }) {
 
       {posts.length === 0 ? (
         <div style={{ opacity: 0.75 }}>
-          Aucune photo publiée pour l’instant.
+          {t('feed.noPhotos')}
         </div>
       ) : (
         <div style={{ display: "grid", gap: 14 }}>
           {posts.map((p) => {
             const m = memberByUid.get(p.fromUid);
             const avatarUrl = m?.avatarUrl || "";
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                {p.fromAvatarUrl ? (
-                  <img
-                    src={p.fromAvatarUrl}
-                    alt=""
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: "50%",
-                      display: "grid",
-                      placeItems: "center",
-                      background: "rgba(11,94,215,0.12)",
-                    }}
-                  >
-                    🎿
-                  </div>
-                )}
-                <div style={{ fontWeight: 900 }}>{p.fromName || "Skieur"}</div>
-              </div>
-
-              <div style={{ opacity: 0.7, fontWeight: 800 }}>
-                {niceTime(p.createdAt)}
-              </div>
-            </div>;
-
-            const name = m?.pseudo || p.fromName || "Skieur";
+            const name = m?.pseudo || p.fromName || t('common.skier');
 
             return (
               <div
@@ -354,7 +316,6 @@ export default function GroupFeed({ groupId, user, me }) {
                           fontWeight: 950,
                           color: "#08304d",
                         }}
-                        title="Pas d'avatar enregistré"
                       >
                         🎿
                       </div>

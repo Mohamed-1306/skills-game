@@ -1,11 +1,111 @@
 {
   "app": {"title": "SKILLS GAME", "subtitle": "Herausforderungen, Prävention & Spaß ⛷️"},
-  "auth": {"email": "E-Mail", "password": "Passwort", "passwordMin": "Passwort (min 6 Zeichen)", "login": "Anmelden", "signup": "Registrieren", "createAccount": "Konto erstellen", "alreadyHaveAccount": "Ich habe bereits ein Konto", "logout": "Abmelden", "loading": "Laden..."},
+  "auth": {
+    "email": "E-Mail",
+    "password": "Passwort",
+    "passwordMin": "Passwort (min 6 Zeichen)",
+    "login": "Anmelden",
+    "signup": "Registrieren",
+    "createAccount": "Konto erstellen",
+    "alreadyHaveAccount": "Ich habe bereits ein Konto",
+    "logout": "Abmelden",
+    "loading": "Laden...",
+    "connectToContinue": "Melde dich an, um fortzufahren.",
+    "forgotPassword": "Passwort vergessen",
+    "continueWithGoogle": "Mit Google fortfahren",
+    "accountCreated": "✅ Konto erstellt. Überprüfe deine E-Mail und melde dich an."
+  },
   "profile": {"title": "Mein Profil", "pseudo": "Dein Nickname", "pseudoPlaceholder": "Dein Nickname (2–18 Zeichen)", "choosePseudo": "Wähle deinen Nickname", "mustCreatePseudo": "Du musst einen Nickname erstellen.", "changePseudo": "Nickname ändern", "validatePseudo": "Nickname bestätigen", "changeAvatar": "Avatar ändern", "avatarUpdated": "Avatar aktualisiert"},
   "group": {"title": "Gruppe", "name": "Gruppenname (z.B. Mitbewohner)", "create": "Neue Gruppe erstellen", "creating": "Erstellen...", "join": "Gruppe beitreten", "scan": "QR scannen", "inviteCode": "Einladungscode (einfügen oder QR)", "copyLink": "Link kopieren", "linkCopied": "Link kopiert", "share": "Teilen", "shareReady": "Teilen bereit", "members": "Mitglieder", "member": "Mitglied", "groupCreated": "Gruppe erstellt", "groupJoined": "Gruppe beigetreten", "alreadyInGroup": "Du bist bereits in einer Gruppe.", "notInGroupYet": "Noch nicht in einer Gruppe", "joinWithCode": "Trete einer Gruppe bei.", "qrInvite": "QR (Einladungscode)", "clear": "Löschen", "inviteDetected": "Einladung erkannt"},
   "challenge": {"send": "Herausforderung senden", "sent": "Herausforderung gesendet", "newReceived": "Neue Herausforderung", "validated": "Herausforderung bestätigt!", "failed": "Herausforderung fehlgeschlagen"},
   "nav": {"home": "Startseite", "challenges": "Meine Herausforderungen", "hand": "Meine Hand", "feed": "Feed", "more": "Mehr"},
   "stats": {"points": "Pkt", "profile": "Profil", "stats": "Statistiken"},
-  "common": {"error": "Fehler", "close": "Schließen"},
+  "leaderboard": {"title": "Rangliste", "bestChallenges": "Beste Anzahl validierter Herausforderungen", "pointLevel": "Punktestand"},
+  "ranking": {"or": "Skifahrer GOLD", "argent": "Skifahrer SILBER", "bronze": "Skifahrer BRONZE", "carton": "Skifahrer KARTON", "vert": "Skifahrer GRÜN"},
+  "members": {"title": "Mitglieder"},
+  "hand": {"imageBroken": "Bild nicht gefunden / URL defekt", "noCards": "Keine Karten auf der Hand"},
+  "home": {
+    "goal": "Das Ziel: sich auf den Pisten herausfordern, Punkte sammeln und die Reise mit der besten Punktzahl beenden 🏔️",
+    "cards": {
+      "title": "Die Karten",
+      "rule1": "Es gibt <b>15 Karten</b>: 5 🟩 Herausforderung, 5 🟦 Gutes Verhalten, 5 🟥 Einschränkung.",
+      "rule2": "Jeden Tag erhältst du <b>3 neue Karten</b> (1 von jeder Farbe), unterschiedlich.",
+      "rule3": "Du behältst deine Karten, solange du sie nicht benutzt: du kannst mehr als 3 haben, wenn du gut spielst."
+    },
+    "send": {
+      "title": "Eine Herausforderung senden",
+      "rule1": "Du wählst eine Karte aus <b>Meine Hand</b>, dann sendest du sie an ein Mitglied.",
+      "rule2": "Der Empfänger sieht <b>wer</b> ihm die Herausforderung gesendet hat.",
+      "rule3": "Anti-Spam-Regel: du kannst nicht <b>2 Herausforderungen desselben Typs</b> an dieselbe Person am selben Tag senden (z.B. 2 gute Verhaltensweisen)."
+    },
+    "result": {
+      "title": "Erfolg / Misserfolg",
+      "validated": "Wenn die Herausforderung bestätigt wird, erhältst du Punkte:",
+      "challenge": "🟩 Herausforderung: <b>200</b> Pkt",
+      "goodConduct": "🟦 Gutes Verhalten: <b>250</b> Pkt",
+      "constraint": "🟥 Einschränkung: <b>350</b> Pkt",
+      "failed": "Wenn die Herausforderung <b>fehlgeschlagen</b> ist, erhältst du keine Punkte.",
+      "daily": "Damit alle spielen können: du hast immer mindestens <b>3 Karten pro Tag</b> zum Senden."
+    },
+    "ranking": {
+      "title": "Rangliste & Abzeichen",
+      "badgesDepend": "Abzeichen hängen von Punkten ab:",
+      "gold": "🥇 Skifahrer GOLD: 3200+ Pkt",
+      "silver": "🥈 Skifahrer SILBER: 2400+ Pkt",
+      "bronze": "🥉 Skifahrer BRONZE: 1500+ Pkt",
+      "cardboard": "📦 Skifahrer KARTON: weniger als 1500 Pkt",
+      "multipleOr": "In einer Gruppe können mehrere Personen \"GOLD\" sein: die <b>Punktzahl</b> entscheidet.",
+      "greenBonus": "Bonus: wer die meisten <b>Öko</b>-Herausforderungen hat, wird <b>🌱 Skifahrer GRÜN</b>."
+    },
+    "membersSubtitle": "Finde alle Fahrer in deiner Gruppe und sieh wer führt."
+  },
+  "feed": {
+    "title": "Gruppen-Feed",
+    "publishPhoto": "Ein Foto veröffentlichen",
+    "openCamera": "Kamera öffnen / Foto auswählen",
+    "preview": "Vorschau",
+    "uploading": "Hochladen...",
+    "publishing": "Veröffentlichen...",
+    "publish": "Veröffentlichen",
+    "cancel": "Abbrechen",
+    "noPhotos": "Noch keine Fotos veröffentlicht.",
+    "notMember": "Du bist kein Mitglied dieser Gruppe (Mitgliedsdokument fehlt).",
+    "mustBeInGroup": "Du musst in der Gruppe sein",
+    "choosePhoto": "Wähle ein Foto"
+  },
+  "sendCard": {
+    "noCards": "Du hast keine Karten auf der Hand",
+    "chooseCard": "Wähle eine Karte",
+    "chooseCardPlaceholder": "Wähle eine Karte…",
+    "card": "Karte",
+    "tapToOpen": "Tippe zum Öffnen der Auswahl",
+    "noImage": "(kein Bild)",
+    "selected": "ausgewählt",
+    "noCardsInHand": "Du hast keine Karten auf der Hand.",
+    "chooseRecipient": "Wähle einen Empfänger…",
+    "tapToChange": "Tippe zum Ändern",
+    "tapToOpenList": "Tippe zum Öffnen der Liste",
+    "sendButton": "Senden"
+  },
+  "incoming": {
+    "subtitle": "Hier erhältst du Herausforderungen, die andere dir senden.",
+    "noChallenges": "Momentan keine ausstehenden Herausforderungen ❄️",
+    "challengeBadge": "🟩 Herausforderung",
+    "goodConductBadge": "🟦 Gutes Verhalten",
+    "constraintBadge": "🟥 Einschränkung",
+    "cardBadge": "🃏 Karte",
+    "challenge": "Herausforderung",
+    "openCard": "Öffne die Karte, um die Herausforderung zu lesen.",
+    "validated": "Herausforderung bestätigt",
+    "failed": "Herausforderung fehlgeschlagen"
+  },
+  "history": {
+    "title": "Verlauf",
+    "noChallenges": "Noch keine abgeschlossenen Herausforderungen",
+    "success": "Erfolg",
+    "failed": "Fehlgeschlagen",
+    "proof": "Beweis"
+  },
+  "common": {"error": "Fehler", "close": "Schließen", "skier": "Skifahrer"},
   "errors": {"notConnected": "Nicht verbunden.", "enterPseudo": "Gib einen Nickname ein.", "pseudoTooShort": "Nickname zu kurz.", "pseudoTooLong": "Nickname zu lang (max 18).", "enterGroupName": "Gib einen Gruppennamen ein.", "alreadyInGroup": "Du bist bereits in einer Gruppe.", "invalidInvite": "Füge den Code ein.", "enterPseudoToCreate": "Gib einen Nickname ein.", "enterPseudoToJoin": "Gib einen Nickname ein."}
 }

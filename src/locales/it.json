@@ -1,11 +1,111 @@
 {
   "app": {"title": "SKILLS GAME", "subtitle": "Sfide, prevenzione e divertimento sulle piste ⛷️"},
-  "auth": {"email": "Email", "password": "Password", "passwordMin": "Password (min 6 caratteri)", "login": "Accedi", "signup": "Registrati", "createAccount": "Crea il mio account", "alreadyHaveAccount": "Ho già un account", "logout": "Disconnetti", "loading": "Caricamento..."},
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "passwordMin": "Password (min 6 caratteri)",
+    "login": "Accedi",
+    "signup": "Registrati",
+    "createAccount": "Crea il mio account",
+    "alreadyHaveAccount": "Ho già un account",
+    "logout": "Disconnetti",
+    "loading": "Caricamento...",
+    "connectToContinue": "Accedi per continuare.",
+    "forgotPassword": "Password dimenticata",
+    "continueWithGoogle": "Continua con Google",
+    "accountCreated": "✅ Account creato. Controlla la tua email poi accedi."
+  },
   "profile": {"title": "Il mio profilo", "pseudo": "Il tuo nickname", "pseudoPlaceholder": "Il tuo nickname (2–18 caratteri)", "choosePseudo": "Scegli il tuo nickname", "mustCreatePseudo": "Devi creare un nickname per entrare nell'app.", "changePseudo": "Cambia nickname", "validatePseudo": "Convalida il mio nickname", "changeAvatar": "Cambia avatar", "avatarUpdated": "Avatar aggiornato"},
   "group": {"title": "Gruppo", "name": "Nome del gruppo (es: coinquilini)", "create": "Crea un nuovo gruppo", "creating": "Creazione...", "join": "Unisciti a un gruppo", "scan": "Scansiona QR", "inviteCode": "Codice invito (incolla o scansiona QR)", "copyLink": "Copia link", "linkCopied": "Link copiato", "share": "Condividi", "shareReady": "Condivisione pronta", "members": "Membri", "member": "membro", "groupCreated": "Gruppo creato", "groupJoined": "Gruppo unito", "alreadyInGroup": "Sei già in un gruppo. (Solo 1 gruppo)", "notInGroupYet": "Non ancora in un gruppo", "joinWithCode": "Unisciti a un gruppo con un codice/QR.", "qrInvite": "QR (codice invito)", "clear": "Cancella", "inviteDetected": "Invito rilevato: ti unirai al gruppo"},
   "challenge": {"send": "Invia sfida", "sent": "Sfida inviata", "newReceived": "Nuova sfida ricevuta", "validated": "Sfida convalidata + punti!", "failed": "Sfida fallita"},
   "nav": {"home": "Home", "challenges": "Le mie sfide", "hand": "La mia mano", "feed": "Feed", "more": "Altro"},
   "stats": {"points": "pts", "profile": "Profilo", "stats": "Statistiche"},
-  "common": {"error": "Errore", "close": "Chiudi"},
+  "leaderboard": {"title": "Classifica", "bestChallenges": "Miglior numero di sfide convalidate", "pointLevel": "livello punti"},
+  "ranking": {"or": "Sciatore ORO", "argent": "Sciatore ARGENTO", "bronze": "Sciatore BRONZO", "carton": "Sciatore CARTONE", "vert": "Sciatore VERDE"},
+  "members": {"title": "Membri"},
+  "hand": {"imageBroken": "Immagine non trovata / URL non valido", "noCards": "Nessuna carta in mano"},
+  "home": {
+    "goal": "L'obiettivo: lanciare sfide sulle piste, guadagnare punti e finire il viaggio con il punteggio migliore 🏔️",
+    "cards": {
+      "title": "Le carte",
+      "rule1": "Ci sono <b>15 carte</b>: 5 🟩 Sfida, 5 🟦 Buona condotta, 5 🟥 Vincolo.",
+      "rule2": "Ogni giorno ricevi <b>3 nuove carte</b> (1 di ogni colore), diverse.",
+      "rule3": "Conservi le tue carte finché non le usi: puoi averne più di 3 se giochi bene."
+    },
+    "send": {
+      "title": "Invia una sfida",
+      "rule1": "Scegli una carta da <b>La mia mano</b>, poi la invii a un membro.",
+      "rule2": "Il destinatario vede <b>chi</b> gli ha inviato la sfida.",
+      "rule3": "Regola anti-spam: non puoi inviare <b>2 sfide dello stesso tipo</b> alla stessa persona nello stesso giorno (es: 2 buone condotte)."
+    },
+    "result": {
+      "title": "Successo / Fallimento",
+      "validated": "Se la sfida è convalidata, guadagni punti:",
+      "challenge": "🟩 Sfida: <b>200</b> pts",
+      "goodConduct": "🟦 Buona condotta: <b>250</b> pts",
+      "constraint": "🟥 Vincolo: <b>350</b> pts",
+      "failed": "Se la sfida è <b>fallita</b>, non guadagni punti.",
+      "daily": "Perché tutti possano giocare: hai sempre almeno <b>3 carte al giorno</b> da inviare."
+    },
+    "ranking": {
+      "title": "Classifica e badge",
+      "badgesDepend": "I badge dipendono dai punti:",
+      "gold": "🥇 Sciatore ORO: 3200+ pts",
+      "silver": "🥈 Sciatore ARGENTO: 2400+ pts",
+      "bronze": "🥉 Sciatore BRONZO: 1500+ pts",
+      "cardboard": "📦 Sciatore CARTONE: meno di 1500 pts",
+      "multipleOr": "In un gruppo, più persone possono essere \"ORO\": il <b>punteggio</b> decide.",
+      "greenBonus": "Bonus: chi ha più sfide <b>eco</b> diventa <b>🌱 Sciatore VERDE</b>."
+    },
+    "membersSubtitle": "Trova tutti i rider del tuo gruppo e vedi chi è in testa."
+  },
+  "feed": {
+    "title": "Feed del gruppo",
+    "publishPhoto": "Pubblica una foto",
+    "openCamera": "Apri fotocamera / scegli una foto",
+    "preview": "Anteprima",
+    "uploading": "Caricamento...",
+    "publishing": "Pubblicazione...",
+    "publish": "Pubblica",
+    "cancel": "Annulla",
+    "noPhotos": "Nessuna foto pubblicata ancora.",
+    "notMember": "Non sei membro di questo gruppo (doc membro mancante).",
+    "mustBeInGroup": "Devi essere nel gruppo",
+    "choosePhoto": "Scegli una foto"
+  },
+  "sendCard": {
+    "noCards": "Non hai carte in mano",
+    "chooseCard": "Scegli una carta",
+    "chooseCardPlaceholder": "Scegli una carta…",
+    "card": "Carta",
+    "tapToOpen": "Tocca per aprire la selezione",
+    "noImage": "(nessuna immagine)",
+    "selected": "selezionata",
+    "noCardsInHand": "Non hai carte in mano.",
+    "chooseRecipient": "Scegli un destinatario…",
+    "tapToChange": "Tocca per cambiare",
+    "tapToOpenList": "Tocca per aprire l'elenco",
+    "sendButton": "Invia"
+  },
+  "incoming": {
+    "subtitle": "Ricevi qui le sfide che gli altri ti inviano.",
+    "noChallenges": "Nessuna sfida in attesa al momento ❄️",
+    "challengeBadge": "🟩 Sfida",
+    "goodConductBadge": "🟦 Buona condotta",
+    "constraintBadge": "🟥 Vincolo",
+    "cardBadge": "🃏 Carta",
+    "challenge": "Sfida",
+    "openCard": "Apri la carta per leggere la sfida.",
+    "validated": "Sfida convalidata",
+    "failed": "Sfida fallita"
+  },
+  "history": {
+    "title": "Storico",
+    "noChallenges": "Nessuna sfida completata ancora",
+    "success": "Riuscita",
+    "failed": "Fallita",
+    "proof": "Prova"
+  },
+  "common": {"error": "Errore", "close": "Chiudi", "skier": "Sciatore"},
   "errors": {"notConnected": "Non connesso.", "enterPseudo": "Inserisci un nickname.", "pseudoTooShort": "Nickname troppo corto.", "pseudoTooLong": "Nickname troppo lungo (max 18).", "enterGroupName": "Inserisci un nome gruppo.", "alreadyInGroup": "Sei già in un gruppo.", "invalidInvite": "Incolla il codice invito.", "enterPseudoToCreate": "Inserisci un nickname per creare un gruppo.", "enterPseudoToJoin": "Inserisci un nickname per unirti."}
 }

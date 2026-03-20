@@ -1,6 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { tierFromPoints, badgeForMember } from "../logic/ranking";
 
 export default function Leaderboard({ members }) {
+  const { t } = useTranslation();
+
   const sorted = [...(members || [])].sort(
     (a, b) => (b.points || 0) - (a.points || 0)
   );
@@ -10,7 +13,7 @@ export default function Leaderboard({ members }) {
 
   return (
     <div>
-      <h3 style={{ marginTop: 0 }}>🏆 Classement</h3>
+      <h3 style={{ marginTop: 0 }}>🏆 {t('leaderboard.title')}</h3>
 
       <ol style={{ margin: 0, paddingLeft: 18 }}>
         {sorted.map((m, idx) => {
@@ -19,9 +22,9 @@ export default function Leaderboard({ members }) {
           const eco = m.stats?.eco || 0;
 
           const isEcoWinner = topEco > 0 && eco === topEco;
-          const badge = badgeForMember({ points: pts, isEcoWinner });
+          const badge = badgeForMember({ points: pts, isEcoWinner, t });
 
-          const tier = tierFromPoints(pts); // utile si tu veux afficher la catégorie aussi
+          const tier = tierFromPoints(pts);
 
           return (
             <li key={m.id} style={{ margin: "10px 0" }}>
@@ -35,24 +38,23 @@ export default function Leaderboard({ members }) {
               >
                 <div style={{ fontWeight: 900 }}>
                   {idx === 0 ? "👑 " : ""}
-                  {m.pseudo || m.displayName || "Skieur"}
+                  {m.pseudo || m.displayName || t('common.skier')}
                 </div>
 
                 <div style={{ fontWeight: 900 }}>
-                  {badge} • 🏆 {pts} pts • ✅ {success} • 🌱 {eco}
+                  {badge} • 🏆 {pts} {t('stats.points')} • ✅ {success} • 🌱 {eco}
                 </div>
               </div>
 
               {topSuccess > 0 && success === topSuccess && (
                 <div style={{ opacity: 0.75, fontWeight: 800, marginTop: 4 }}>
-                  🔥 Meilleur nombre de défis validés
+                  🔥 {t('leaderboard.bestChallenges')}
                 </div>
               )}
 
-              {/* Optionnel : si tu veux afficher le tier même quand vert */}
               {isEcoWinner ? (
                 <div style={{ opacity: 0.7, fontWeight: 800, marginTop: 4 }}>
-                  (niveau points : {tier.emoji} {tier.label})
+                  ({t('leaderboard.pointLevel')} : {tier.emoji} {t(`ranking.${tier.key}`)})
                 </div>
               ) : null}
             </li>

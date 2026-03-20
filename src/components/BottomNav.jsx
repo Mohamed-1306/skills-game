@@ -1,4 +1,3 @@
-// src/components/BottomNav.jsx
 import { useTranslation } from 'react-i18next';
 
 export default function BottomNav({ tab, setTab }) {

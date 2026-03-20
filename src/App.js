@@ -484,7 +484,7 @@ async function uploadAvatar({ file, uid }) {
    App
 ========================= */
 export default function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [user, setUser] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   // refs (scroll + focus)
@@ -1658,7 +1658,7 @@ useEffect(() => {
             >
               {/* Nom du groupe */}
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                <span style={{ opacity: 0.8 }}>Groupe :</span>
+                <span style={{ opacity: 0.8 }}>{t('group.title')} :</span>
                 <span style={{ opacity: 0.95 }}>
                   {activeGroup?.name || "Mon groupe"}
                 </span>
@@ -1673,7 +1673,7 @@ useEffect(() => {
               {members.length > 0 && (
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <span style={{ opacity: 0.95 }}>
-                    {members.length} membre{members.length > 1 ? 's' : ''}
+                    {members.length} {t('group.member')}{members.length > 1 ? 's' : ''}
                   </span>
                 </div>
               )}
@@ -1701,7 +1701,7 @@ useEffect(() => {
                   fontSize: "clamp(12px, 3vw, 14px)",
                 }}
               >
-                📋 Copier le lien
+                📋 {t('group.copyLink')}
               </button>
 
               <button
@@ -1727,7 +1727,7 @@ useEffect(() => {
                   fontSize: "clamp(12px, 3vw, 14px)",
                 }}
               >
-                📤 Partager
+                📤 {t('group.share')}
               </button>
             </div>
           ) : null}
@@ -1795,7 +1795,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
     />
     {activeGroupId && (
       <div style={{ fontSize: 14, fontWeight: 600 }}>
-        {activeGroup?.name || "Mon groupe"} • {members.length} membre{members.length > 1 ? 's' : ''}
+        {activeGroup?.name || t('group.title')} • {members.length} {t('group.member')}{members.length > 1 ? 's' : ''}
       </div>
     )}
   </div>
@@ -1826,7 +1826,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
             fontWeight: 600
           }}
         >
-          📋 Copier le lien
+          📋 {t('group.copyLink')}
         </button>
 
         <button
@@ -1852,7 +1852,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
             fontWeight: 600
           }}
         >
-          📤 Partager
+          📤 {t('group.share')}
         </button>
       </>
     )}
@@ -1926,80 +1926,98 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
 ========================= */
 
 
-  if (!user) {
+ if (!user) {
     return (
-    <div style={ui.page}>
-      <div style={ui.container}>
-        <div style={ui.panel}>
-          <h2 style={{ marginTop: 0, color: "#08304d" }}>
-            {isSignup ? t("auth.signup") : t("auth.login")}
-          </h2>
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #2e77d0 0%, #1a5fb4 100%)",
+        display: "grid",
+        placeItems: "center",
+        padding: 16,
+      }}>
+        <div style={{ width: "min(520px, 96vw)", display: "grid", gap: 16 }}>
 
-          <p style={{ color: "#08304d", opacity: 0.9, marginTop: 6 }}>
-            {isSignup
-              ? "Crée un compte pour commencer à jouer."
-              : "Connecte-toi pour continuer."}
-          </p>
+          {/* Sélecteur de langue */}
+          <LanguageSwitcher variant="pills" />
 
-          {err ? (
-            <div style={ui.error}>
-              <b>Erreur</b>
-              <div style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>{err}</div>
+          {/* Card login */}
+          <div style={{
+            background: "#fff",
+            borderRadius: 18,
+            padding: 24,
+            boxShadow: "0 14px 34px rgba(0,0,0,0.15)",
+          }}>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 26, fontWeight: 950, color: "#08304d" }}>⛷️ SKILLS GAME</div>
             </div>
-          ) : null}
 
-          <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-            <input
-              type="email"
-              placeholder={t("auth.email")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={ui.input}
-              autoComplete="email"
-            />
+            <h2 style={{ marginTop: 0, color: "#08304d" }}>
+              {isSignup ? t("auth.signup") : t("auth.login")}
+            </h2>
 
-            <input
-              type="password"
-              placeholder="Mot de passe (min 6 caractères)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={ui.input}
-              autoComplete={isSignup ? "new-password" : "current-password"}
-            />
+            <p style={{ color: "#08304d", opacity: 0.7, marginTop: -8, marginBottom: 16, fontWeight: 700 }}>
+              {isSignup ? t("auth.createAccount") : t("auth.connectToContinue")}
+            </p>
 
-            <button
-              type="button"
-              disabled={authBusy}
-              style={ui.button}
-              onClick={() =>
-                isSignup
-                  ? signUpEmail(email, password)
-                  : signInEmail(email, password)
-              }
-            >
-              {authBusy
-                ? t("auth.loading")
-                : isSignup
-                ? "✅ Créer mon compte"
-                : "🔓 Se connecter"}
-            </button>
+            {err ? (
+              <div style={ui.error}>
+                <b>{t("common.error")}</b>
+                <div style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>{err}</div>
+              </div>
+            ) : null}
 
-            <button
-              type="button"
-              style={ui.buttonGhost}
-              onClick={() => {
-                setIsSignup(!isSignup);
-                setErr("");
-              }}
-            >
-              {isSignup
-                ? "← J'ai déjà un compte"
-                : "➕ Créer un compte"}
-            </button>
+            <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+              <input
+                type="email"
+                placeholder={t("auth.email")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={ui.input}
+                autoComplete="email"
+              />
+
+              <input
+                type="password"
+                placeholder={t("auth.passwordMin")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={ui.input}
+                autoComplete={isSignup ? "new-password" : "current-password"}
+              />
+
+              <button
+                type="button"
+                disabled={authBusy}
+                style={ui.button}
+                onClick={() =>
+                  isSignup
+                    ? signUpEmail(email, password)
+                    : signInEmail(email, password)
+                }
+              >
+                {authBusy
+                  ? t("auth.loading")
+                  : isSignup
+                  ? "✅ " + t("auth.createAccount")
+                  : "🔒 " + t("auth.login")}
+              </button>
+
+              <button
+                type="button"
+                style={ui.buttonGhost}
+                onClick={() => {
+                  setIsSignup(!isSignup);
+                  setErr("");
+                }}
+              >
+                {isSignup
+                  ? "← " + t("auth.alreadyHaveAccount")
+                  : "➕ " + t("auth.signup")}
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     );
   }
 
@@ -2485,7 +2503,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                       cursor: "pointer",
                     }}
                   >
-                    ➕ Envoyer un défi
+                    ➕ {t('challenge.send')}
                   </button>
                 </div>
               </div>
@@ -2576,7 +2594,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
                   alignItems: "center",
                 }}
               >
-                <div style={{ fontWeight: 950 }}>📮 Envoyer un défi</div>
+                <div style={{ fontWeight: 950 }}>📮 {t('challenge.send')}</div>
 
                 <button
                   type="button"
