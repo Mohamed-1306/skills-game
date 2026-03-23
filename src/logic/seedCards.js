@@ -1,7 +1,7 @@
 // src/logic/seedCards.js
 import { doc, writeBatch } from "firebase/firestore";
 
-const BASE = "https://firebasestorage.googleapis.com/v0/b/application13-12.firebasestorage.app/o";
+const BASE = "https://raw.githubusercontent.com/Mohamed-1306/skills-game/master/public/cards";
 
 export async function seedCards(db) {
   const cards = {
@@ -11,7 +11,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 250,
       active: true,
-      imageUrl: `${BASE}/apporte_ton_aide.png?alt=media`,
+      imageUrl: `${BASE}/apporte_ton_aide.jpg`,
     },
     bonjour_equipes_domaine: {
       title: "BONJOUR EQUIPES DOMAINE",
@@ -19,7 +19,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 250,
       active: true,
-      imageUrl: `${BASE}/bonjour_equipes_domaine.png?alt=media`,
+      imageUrl: `${BASE}/bonjour_equipes_domaine.jpg`,
     },
     dire_merci_pisteurs: {
       title: "DIRE MERCI A DES PISTEURS",
@@ -27,7 +27,7 @@ export async function seedCards(db) {
       duration: "demi_journee",
       points: 250,
       active: true,
-      imageUrl: `${BASE}/dire_merci_pisteurs.png?alt=media`,
+      imageUrl: `${BASE}/dire_merci_pisteurs.jpg`,
     },
     laisse_passer_2_remontees: {
       title: "LAISSE PASSER 2 PERSONNES A CHAQUE REMONTEES",
@@ -35,7 +35,7 @@ export async function seedCards(db) {
       duration: "demi_journee",
       points: 350,
       active: true,
-      imageUrl: `${BASE}/laisse_passer_2_remontees.png?alt=media`,
+      imageUrl: `${BASE}/laisse_passer_2_remontees.jpg`,
     },
     limite_vitesse_50: {
       title: "LIMITE DE VITESSE 50",
@@ -43,7 +43,7 @@ export async function seedCards(db) {
       duration: "demi_journee",
       points: 350,
       active: true,
-      imageUrl: `${BASE}/limite_vitesse_50.png?alt=media`,
+      imageUrl: `${BASE}/limite_vitesse_50.jpg`,
     },
     materiel_securite: {
       title: "EMPORTE LE MATERIEL DE SECURITE",
@@ -51,7 +51,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 200,
       active: true,
-      imageUrl: `${BASE}/materiel_securite.png?alt=media`,
+      imageUrl: `${BASE}/materiel_securite.jpg`,
     },
     ne_fume_pas: {
       title: "NE FUME PAS",
@@ -59,7 +59,7 @@ export async function seedCards(db) {
       duration: "demi_journee",
       points: 250,
       active: true,
-      imageUrl: `${BASE}/ne_fume_pas.png?alt=media`,
+      imageUrl: `${BASE}/ne_fume_pas.jpg`,
     },
     organise: {
       title: "ORGANISE",
@@ -67,7 +67,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 200,
       active: true,
-      imageUrl: `${BASE}/organise.png?alt=media`,
+      imageUrl: `${BASE}/organise.jpg`,
     },
     paie_l_addition: {
       title: "PAIE L ADDITION",
@@ -75,7 +75,7 @@ export async function seedCards(db) {
       duration: "midi",
       points: 200,
       active: true,
-      imageUrl: `${BASE}/paie_l_addition.png?alt=media`,
+      imageUrl: `${BASE}/paie_l_addition.jpg`,
     },
     porteur: {
       title: "PORTEUR",
@@ -83,7 +83,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 350,
       active: true,
-      imageUrl: `${BASE}/porteur%20.png?alt=media`,
+      imageUrl: `${BASE}/porteur.jpg`,
     },
     ramasse_dechets: {
       title: "RAMASSE DES DECHETS",
@@ -91,7 +91,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 250,
       active: true,
-      imageUrl: `${BASE}/ramasse_dechets.png?alt=media`,
+      imageUrl: `${BASE}/ramasse_dechets.jpg`,
     },
     reste_derriere_moi: {
       title: "RESTE DERRIERE MOI",
@@ -99,7 +99,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 350,
       active: true,
-      imageUrl: `${BASE}/reste_derriere_moi.png?alt=media`,
+      imageUrl: `${BASE}/reste_derriere_moi.jpg`,
     },
     zero_alcool_pistes: {
       title: "PAS D ALCOOL SUR LES PISTES",
@@ -107,7 +107,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 350,
       active: true,
-      imageUrl: `${BASE}/zero_alcool_pistes.png?alt=media`,
+      imageUrl: `${BASE}/zero_alcool_pistes.jpg`,
     },
     zero_arret_descente: {
       title: "0 ARRET SUR UNE DESCENTE",
@@ -115,7 +115,7 @@ export async function seedCards(db) {
       duration: "demi_journee",
       points: 200,
       active: true,
-      imageUrl: `${BASE}/zero_arret_descente.png?alt=media`,
+      imageUrl: `${BASE}/zero_arret_descente.jpg`,
     },
     zero_chute: {
       title: "0 CHUTE",
@@ -123,7 +123,7 @@ export async function seedCards(db) {
       duration: "journee",
       points: 200,
       active: true,
-      imageUrl: `${BASE}/zero_chute.png?alt=media`,
+      imageUrl: `${BASE}/zero_chute.jpg`,
     },
   };
 
