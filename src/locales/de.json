@@ -106,6 +106,7 @@
     "failed": "Fehlgeschlagen",
     "proof": "Beweis"
   },
+  "cardType": {"challenge": "Herausforderung", "goodConduct": "Gutes Verhalten", "constraint": "Einschränkung", "card": "Karte"},
   "common": {"error": "Fehler", "close": "Schließen", "skier": "Skifahrer"},
   "errors": {"notConnected": "Nicht verbunden.", "enterPseudo": "Gib einen Nickname ein.", "pseudoTooShort": "Nickname zu kurz.", "pseudoTooLong": "Nickname zu lang (max 18).", "enterGroupName": "Gib einen Gruppennamen ein.", "alreadyInGroup": "Du bist bereits in einer Gruppe.", "invalidInvite": "Füge den Code ein.", "enterPseudoToCreate": "Gib einen Nickname ein.", "enterPseudoToJoin": "Gib einen Nickname ein."}
 }

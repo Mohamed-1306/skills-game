@@ -106,6 +106,7 @@
     "failed": "Fallita",
     "proof": "Prova"
   },
+  "cardType": {"challenge": "Sfida", "goodConduct": "Buona condotta", "constraint": "Vincolo", "card": "Carta"},
   "common": {"error": "Errore", "close": "Chiudi", "skier": "Sciatore"},
   "errors": {"notConnected": "Non connesso.", "enterPseudo": "Inserisci un nickname.", "pseudoTooShort": "Nickname troppo corto.", "pseudoTooLong": "Nickname troppo lungo (max 18).", "enterGroupName": "Inserisci un nome gruppo.", "alreadyInGroup": "Sei già in un gruppo.", "invalidInvite": "Incolla il codice invito.", "enterPseudoToCreate": "Inserisci un nickname per creare un gruppo.", "enterPseudoToJoin": "Inserisci un nickname per unirti."}
 }

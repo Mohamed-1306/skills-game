@@ -106,6 +106,7 @@
     "failed": "Failed",
     "proof": "Proof"
   },
+  "cardType": {"challenge": "Challenge", "goodConduct": "Good conduct", "constraint": "Constraint", "card": "Card"},
   "common": {"error": "Error", "close": "Close", "skier": "Skier"},
   "errors": {"notConnected": "Not connected. Please log in first.", "enterPseudo": "Enter a nickname.", "pseudoTooShort": "Nickname too short.", "pseudoTooLong": "Nickname too long (max 18).", "enterGroupName": "Enter a group name (e.g., roommates).", "alreadyInGroup": "You're already in a group.", "invalidInvite": "Paste or scan the invitation code.", "enterPseudoToCreate": "Enter a nickname to create a group.", "enterPseudoToJoin": "Enter a nickname to join a group."}
 }
