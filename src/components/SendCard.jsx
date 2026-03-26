@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from 'react-i18next';
 
+const BASE = "https://raw.githubusercontent.com/Mohamed-1306/skills-game/master/public/cards";
+
 // ---------- helpers (local)
 function cleanId(id) {
   return String(id || "")
@@ -39,7 +41,8 @@ function prettyFromId(id) {
     .trim()
     .toUpperCase();
 }
-function getCardLabel(card, idFallback) {
+function getCardLabel(card, idFallback, lang) {
+  if (lang === "en" && card?.title_en) return card.title_en;
   return (
     card?.title ||
     card?.text ||
@@ -48,11 +51,19 @@ function getCardLabel(card, idFallback) {
     prettyFromId(idFallback)
   );
 }
+function translateType(type, t) {
+  const t_lower = String(type || "").toLowerCase();
+  if (t_lower.includes("challenge")) return t("cardType.challenge");
+  if (t_lower.includes("bonne") || t_lower.includes("conduite")) return t("cardType.goodConduct");
+  if (t_lower.includes("contrainte")) return t("cardType.constraint");
+  return t("cardType.card");
+}
 
 // ---------- UI: CardPicker
 function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
-  const { t } = useTranslation();
-  
+  const { t, i18n } = useTranslation();
+  const lang = ["fr", "en", "it", "de"].includes(i18n.language) ? i18n.language : "fr";
+
   const handIds = useMemo(
     () => (Array.isArray(hand) ? hand : []).map(cleanId).filter(Boolean),
     [hand]
@@ -72,7 +83,7 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
   const [open, setOpen] = useState(false);
 
   const selectedLabel = selected.card
-    ? getCardLabel(selected.card, selected.id)
+    ? getCardLabel(selected.card, selected.id, lang)
     : "";
 
   const selectedType = selected.card ? getCardType(selected.card) : "";
@@ -116,7 +127,7 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
             </div>
             {selected.id ? (
               <div style={{ opacity: 0.75, fontWeight: 800, fontSize: 13 }}>
-                {selectedType || t('sendCard.card')}
+                {selectedType ? translateType(selectedType, t) : t('sendCard.card')}
               </div>
             ) : (
               <div style={{ opacity: 0.6, fontWeight: 700, fontSize: 13 }}>
@@ -149,9 +160,8 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
             {handCards.map(({ id, card }) => {
               const type = getCardType(card);
               const color = typeColor(type);
-              const label = getCardLabel(card, id);
-              const img = card?.imageUrl || card?.imgUrl || card?.image || "";
-
+              const label = getCardLabel(card, id, lang);
+              const img = `${BASE}/${lang}/${id}.jpg`;
               const isSelected = cleanId(cardId) === id;
 
               return (
@@ -189,36 +199,20 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
                       justifyContent: "center",
                     }}
                   >
-                    {img ? (
-                      <img
-                        src={img}
-                        alt={label}
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          display: "block",
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontWeight: 900,
-                          opacity: 0.65,
-                        }}
-                      >
-                        {t('sendCard.noImage')}
-                      </div>
-                    )}
+                    <img
+                      src={img}
+                      alt={label}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
                   </div>
 
                   <div style={{ display: "grid", gap: 6 }}>
@@ -246,7 +240,7 @@ function CardPicker({ hand = [], cards = [], cardId, setCardId, disabled }) {
                             background: color,
                           }}
                         />
-                        {type || t('sendCard.card')}
+                        {type ? translateType(type, t) : t('sendCard.card')}
                       </span>
                       {isSelected ? (
                         <span
@@ -316,7 +310,7 @@ export default function SendCard({
   onSend,
 }) {
   const { t } = useTranslation();
-  
+
   const rawIds = Array.isArray(hand) ? hand : [];
   const ids = rawIds.map(cleanId).filter(Boolean);
   const handEmpty = ids.length === 0;
@@ -489,8 +483,7 @@ export default function SendCard({
                         {m.pseudo || m.displayName || t('common.skier')}
                         {m.id === toUid ? (
                           <span style={{ marginLeft: 8, opacity: 0.7 }}>
-                            {" "}
-                            ✓
+                            {" "}✓
                           </span>
                         ) : null}
                       </div>
