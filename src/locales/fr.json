@@ -106,7 +106,8 @@
     "failed": "Échoué",
     "proof": "Preuve"
   },
-  "cardType": {"challenge": "Challenge", "goodConduct": "Bonne conduite", "constraint": "Contrainte", "card": "Carte"},
+  "cardType": 
+  {"challenge": "Challenge", "goodConduct": "Bonne conduite", "constraint": "Contrainte", "card": "Carte"},
   "common": {"error": "Erreur", "close": "Fermer", "skier": "Skieur"},
   "errors": {"notConnected": "Non connecté. Connecte-toi d'abord.", "enterPseudo": "Entre un pseudo.", "pseudoTooShort": "Pseudo trop court.", "pseudoTooLong": "Pseudo trop long (max 18).", "enterGroupName": "Entre un nom de groupe (ex: coloc).", "alreadyInGroup": "Tu es déjà dans un groupe.", "invalidInvite": "Colle ou scanne le code d'invitation.", "enterPseudoToCreate": "Entre un pseudo pour créer un groupe.", "enterPseudoToJoin": "Entre un pseudo pour rejoindre un groupe."}
 }

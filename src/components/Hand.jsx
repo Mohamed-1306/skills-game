@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+const BASE = "https://raw.githubusercontent.com/Mohamed-1306/skills-game/master/public/cards";
+
 export default function Hand({ hand, cards, onGiveMeCards }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const ids = useMemo(() => (Array.isArray(hand) ? hand : []), [hand]);
   const safeCards = useMemo(() => (Array.isArray(cards) ? cards : []), [cards]);
 
@@ -12,6 +14,7 @@ export default function Hand({ hand, cards, onGiveMeCards }) {
     setBroken({});
   }, [ids.join("|")]);
 
+  const lang = ["fr", "en", "it", "de"].includes(i18n.language) ? i18n.language : "fr";
   function prettyFromId(id) {
     return String(id || "")
       .replace(/\.png$/i, "")
@@ -43,15 +46,13 @@ export default function Hand({ hand, cards, onGiveMeCards }) {
     return "carte";
   }
 
-  // Traduit le type de carte
-  function translateType(type) {
-    const t_lower = String(type || "").toLowerCase();
-    if (t_lower.includes("challenge")) return t("incoming.challengeBadge");
-    if (t_lower.includes("bonne") || t_lower.includes("conduite")) return t("incoming.goodConductBadge");
-    if (t_lower.includes("contrainte")) return t("incoming.constraintBadge");
-    return t("incoming.cardBadge");
-  }
-
+function translateType(type) {
+  const t_lower = String(type || "").toLowerCase();
+  if (t_lower.includes("challenge")) return t("cardType.challenge");
+  if (t_lower.includes("bonne") || t_lower.includes("conduite")) return t("cardType.goodConduct");
+  if (t_lower.includes("contrainte")) return t("cardType.constraint");
+  return t("cardType.card");
+}
   function pointsForCard(card) {
     const type = String(getCardType(card) || "").toLowerCase().replace(/\s+/g, "_");
     if (type.includes("challenge")) return 200;
@@ -78,7 +79,6 @@ export default function Hand({ hand, cards, onGiveMeCards }) {
     return (
       <div>
         <div style={{ fontWeight: 900, opacity: 0.85 }}>{t("sendCard.noCards")}</div>
-
         {onGiveMeCards ? (
           <button
             type="button"
@@ -114,11 +114,14 @@ export default function Hand({ hand, cards, onGiveMeCards }) {
           const id = cleanId(rawId);
           const c = safeCards.find((x) => cleanId(x.id) === id);
 
-          const title = c?.title || c?.text || c?.name || prettyFromId(id) || "CARTE";
+          const title = (lang === "en" && c?.title_en)
+  ? c.title_en
+  : c?.title || c?.text || c?.name || prettyFromId(id) || "CARTE";
           const type = getCardType(c);
           const typeLabel = translateType(type);
           const pts = c ? pointsForCard(c) : null;
-          const img = c?.imageUrl || c?.imgUrl || c?.image || c?.photoUrl || "";
+          const img = c?.id ? `${BASE}/${lang}/${c.id}.jpg` : c?.imageUrl || "";
+          console.log("CARD DEBUG:", { id, cardId: c?.id, img: `${BASE}/${lang}/${c?.id}.jpg` });
           const hasImage = !!img && !broken[id];
           const badge = typeBadgeStyle(type);
 
@@ -165,7 +168,6 @@ export default function Hand({ hand, cards, onGiveMeCards }) {
 
           return (
             <div key={id} style={{ display: "grid", gap: 8 }}>
-              {/* Image */}
               {hasImage ? (
                 <div
                   style={{
@@ -189,7 +191,6 @@ export default function Hand({ hand, cards, onGiveMeCards }) {
                 </div>
               ) : null}
 
-              {/* Fallback si pas d'image */}
               {!hasImage ? (
                 <div
                   style={{
@@ -205,15 +206,12 @@ export default function Hand({ hand, cards, onGiveMeCards }) {
                     {badgeSpan}
                     {ptsSpan}
                   </div>
-
                   <div style={{ marginTop: 8, lineHeight: 1.2 }}>{title}</div>
-
                   {!c ? (
                     <div style={{ marginTop: 8, opacity: 0.9, fontWeight: 950, color: "#c63b28" }}>
                       ⚠️ {t("sendCard.noImage")}
                     </div>
                   ) : null}
-
                   {img && broken[id] ? (
                     <div style={{ marginTop: 8, opacity: 0.9, fontWeight: 950, color: "#c63b28" }}>
                       ⚠️ {t("hand.imageBroken")}
@@ -222,7 +220,6 @@ export default function Hand({ hand, cards, onGiveMeCards }) {
                 </div>
               ) : null}
 
-              {/* Mini infos sous l'image */}
               {hasImage ? (
                 <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
