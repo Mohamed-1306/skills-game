@@ -1949,7 +1949,7 @@ const myStats = me?.stats || { success: 0, fail: 0, eco: 0 };
           }}>
             <div style={{ textAlign: "center", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 4 }}>
-                <img src={Logo} alt="Skills Game" style={{ height: 48 }} />
+                <img src={Logo} alt="Skills Game" style={{ height: 72 }} />
                 <div style={{ fontSize: 26, fontWeight: 950, color: "#08304d", letterSpacing: 0.5 }}>SKILLS GAME</div>
               </div>
             </div>
